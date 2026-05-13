@@ -7,17 +7,17 @@ import fr.fastedit.edit.EditEngine;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
-public final class PasteCmd extends Cmd {
-    public PasteCmd() { super("/paste", "Paste your clipboard at your feet.", "//paste [-a]"); }
+public class PasteCommand extends FeCommand {
+    public PasteCommand() { super("paste", "Paste your clipboard at your feet."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
+    protected boolean run(Player p, Session session, String[] args) {
         Clipboard clip = session.clipboard();
         require(clip != null, "your clipboard is empty — //copy first");
         boolean pasteAir = args.length > 0 && args[0].equalsIgnoreCase("-a");
+        Vec3 anchor = new Vec3(p.getFloorX(), p.getFloorY(), p.getFloorZ());
 
-        Vec3 anchor = new Vec3(player.getFloorX(), player.getFloorY(), player.getFloorZ());
-        EditEngine.get().submit(player.getLevel(),
+        EditEngine.get().submit(p.getLevel(),
             es -> {
                 Vec3 off = clip.offset();
                 for (int y = 0; y < clip.height(); y++)
@@ -32,8 +32,8 @@ public final class PasteCmd extends Cmd {
                                 anchor.z() + z - off.z()), s);
                         }
             },
-            n -> player.sendMessage("§dFastEdit §7| pasted §f" + n + "§7 blocks."),
-            t -> player.sendMessage("§c[FastEdit] " + t.getMessage()),
+            n -> p.sendMessage("§dFastEdit §7| pasted §f" + n + "§7 blocks."),
+            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
         return true;
     }

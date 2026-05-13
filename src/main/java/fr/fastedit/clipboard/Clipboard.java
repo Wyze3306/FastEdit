@@ -5,12 +5,7 @@ import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 
-/**
- * A 3D grid of block states. The origin is the corner of the box; the
- * <code>offset</code> says where the player was relative to that corner when
- * the copy was taken, so <code>//paste</code> can restore the same anchor.
- */
-public final class Clipboard {
+public class Clipboard {
 
     private final int width, height, length;
     private final BlockState[] data;
@@ -33,13 +28,8 @@ public final class Clipboard {
     public Vec3 offset() { return offset == null ? new Vec3(0, 0, 0) : offset; }
     public void setOffset(Vec3 o) { this.offset = o; }
 
-    public BlockState get(int x, int y, int z) {
-        return data[index(x, y, z)];
-    }
-
-    public void set(int x, int y, int z, BlockState state) {
-        data[index(x, y, z)] = state;
-    }
+    public BlockState get(int x, int y, int z) { return data[index(x, y, z)]; }
+    public void set(int x, int y, int z, BlockState state) { data[index(x, y, z)] = state; }
 
     public BlockState getOrAir(int x, int y, int z) {
         BlockState s = get(x, y, z);

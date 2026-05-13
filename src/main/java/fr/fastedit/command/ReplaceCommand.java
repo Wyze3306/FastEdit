@@ -7,25 +7,23 @@ import fr.fastedit.edit.EditEngine;
 import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
-public final class ReplaceCmd extends Cmd {
-    public ReplaceCmd() { super("/replace", "Replace blocks matching a mask.", "//replace <mask> <pattern>"); }
+public class ReplaceCommand extends FeCommand {
+    public ReplaceCommand() { super("replace", "Replace blocks matching a mask."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
+    protected boolean run(Player p, Session session, String[] args) {
         require(args.length >= 2, "usage: //replace <mask> <pattern>");
-        require(session.hasSelection(), "no selection — set pos1/pos2 first");
+        require(session.hasSelection(), "no selection");
         Mask mask = Mask.parse(args[0]);
         Pattern pattern = Pattern.parse(args[1]);
         var region = session.region();
-        var level = session.level();
-
-        EditEngine.get().submit(level,
+        EditEngine.get().submit(session.level(),
             es -> {
                 es.setFilter(mask::matches);
                 Shapes.cuboid(region, v -> es.plan(v, pattern.next(v)));
             },
-            n -> player.sendMessage("§dFastEdit §7| replaced §f" + n + "§7 blocks."),
-            t -> player.sendMessage("§c[FastEdit] " + t.getMessage()),
+            n -> p.sendMessage("§dFastEdit §7| replaced §f" + n + "§7 blocks."),
+            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
         return true;
     }

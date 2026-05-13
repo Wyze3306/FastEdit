@@ -12,15 +12,9 @@ public final class Blocks {
 
     public static BlockState air() { return state(AIR_ID); }
 
-    /**
-     * Resolve a block identifier into its default state.
-     * Accepts "stone" (defaulted to minecraft:stone), "minecraft:stone", or
-     * any namespaced custom id registered on the server.
-     */
     public static BlockState state(String token) {
         if (token == null || token.isBlank()) return null;
-        String id = normalize(token.trim());
-        BlockProperties props = Registries.BLOCK.getBlockProperties(id);
+        BlockProperties props = Registries.BLOCK.getBlockProperties(normalize(token.trim()));
         return props == null ? null : props.getDefaultState();
     }
 

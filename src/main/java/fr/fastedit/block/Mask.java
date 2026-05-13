@@ -7,17 +7,6 @@ import fr.fastedit.math.Vec3;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Tests whether a block at a given position matches some criterion.
- *
- * Syntax:
- *   *           any block
- *   #air        air blocks only (alias of "air")
- *   #solid      any non-air block
- *   stone       only the given block id
- *   stone,dirt  any of these block ids
- *   !stone      anything except stone
- */
 @FunctionalInterface
 public interface Mask {
 

@@ -11,19 +11,19 @@ import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
-public final class CutCmd extends Cmd {
-    public CutCmd() { super("/cut", "Copy + clear the selection.", "//cut"); }
+public class CutCommand extends FeCommand {
+    public CutCommand() { super("cut", "Copy + clear the selection."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
+    protected boolean run(Player p, Session session, String[] args) {
         require(session.hasSelection(), "no selection");
         Region r = session.region();
         Level level = session.level();
         Clipboard clip = Clipboard.ofRegion(r);
         clip.setOffset(new Vec3(
-            player.getFloorX() - r.min().x(),
-            player.getFloorY() - r.min().y(),
-            player.getFloorZ() - r.min().z()));
+            p.getFloorX() - r.min().x(),
+            p.getFloorY() - r.min().y(),
+            p.getFloorZ() - r.min().z()));
 
         for (int y = 0; y < r.height(); y++)
             for (int z = 0; z < r.length(); z++)
@@ -36,8 +36,8 @@ public final class CutCmd extends Cmd {
         BlockState air = Blocks.air();
         EditEngine.get().submit(level,
             es -> Shapes.cuboid(r, v -> es.plan(v, air)),
-            n -> player.sendMessage("§dFastEdit §7| cut §f" + n + "§7 blocks."),
-            t -> player.sendMessage("§c[FastEdit] " + t.getMessage()),
+            n -> p.sendMessage("§dFastEdit §7| cut §f" + n + "§7 blocks."),
+            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
         return true;
     }

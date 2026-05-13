@@ -10,20 +10,19 @@ import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
-public final class MoveCmd extends Cmd {
-    public MoveCmd() { super("/move", "Move selection along a direction.", "//move <amount> [direction]"); }
+public class MoveCommand extends FeCommand {
+    public MoveCommand() { super("move", "Move the selection along a direction."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
-        require(args.length >= 1, "usage: //move <amount> [up|down|north|south|east|west|me]");
+    protected boolean run(Player p, Session session, String[] args) {
+        require(args.length >= 1, "usage: //move <amount> [direction]");
         require(session.hasSelection(), "no selection");
         int amount = Integer.parseInt(args[0]);
         String dir = args.length > 1 ? args[1].toLowerCase() : "me";
+        Vec3 step = direction(p, dir).mul(amount);
 
-        Vec3 step = direction(player, dir).mul(amount);
         Region r = session.region();
         Level level = session.level();
-
         BlockState[] snapshot = new BlockState[(int) r.volume()];
         int idx = 0;
         for (int y = 0; y < r.height(); y++)
@@ -47,8 +46,8 @@ public final class MoveCmd extends Cmd {
                                 r.min().z() + z + step.z()), s);
                         }
             },
-            n -> player.sendMessage("§dFastEdit §7| moved §f" + n + "§7 blocks."),
-            t -> player.sendMessage("§c[FastEdit] " + t.getMessage()),
+            n -> p.sendMessage("§dFastEdit §7| moved §f" + n + "§7 blocks."),
+            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
 
         session.setPos1(level, r.min().add(step));
@@ -56,21 +55,21 @@ public final class MoveCmd extends Cmd {
         return true;
     }
 
-    static Vec3 direction(Player player, String dir) {
+    static Vec3 direction(Player p, String dir) {
         return switch (dir) {
-            case "up", "u"          -> new Vec3(0, 1, 0);
-            case "down", "d"        -> new Vec3(0, -1, 0);
-            case "north", "n"       -> new Vec3(0, 0, -1);
-            case "south", "s"       -> new Vec3(0, 0, 1);
-            case "east", "e"        -> new Vec3(1, 0, 0);
-            case "west", "w"        -> new Vec3(-1, 0, 0);
-            case "me", "forward", "f" -> facing(player);
+            case "up", "u"             -> new Vec3(0, 1, 0);
+            case "down", "d"           -> new Vec3(0, -1, 0);
+            case "north", "n"          -> new Vec3(0, 0, -1);
+            case "south", "s"          -> new Vec3(0, 0, 1);
+            case "east", "e"           -> new Vec3(1, 0, 0);
+            case "west", "w"           -> new Vec3(-1, 0, 0);
+            case "me", "forward", "f"  -> facing(p);
             default -> throw new IllegalArgumentException("unknown direction: " + dir);
         };
     }
 
-    private static Vec3 facing(Player player) {
-        double yaw = Math.toRadians(player.getYaw());
+    private static Vec3 facing(Player p) {
+        double yaw = Math.toRadians(p.getYaw());
         int dx = (int) Math.round(-Math.sin(yaw));
         int dz = (int) Math.round( Math.cos(yaw));
         if (dx == 0 && dz == 0) return new Vec3(0, 1, 0);

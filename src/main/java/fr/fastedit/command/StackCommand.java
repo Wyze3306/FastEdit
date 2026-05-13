@@ -8,22 +8,21 @@ import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
-public final class StackCmd extends Cmd {
-    public StackCmd() { super("/stack", "Stack the selection along a direction.", "//stack <count> [direction]"); }
+public class StackCommand extends FeCommand {
+    public StackCommand() { super("stack", "Stack the selection along a direction."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
+    protected boolean run(Player p, Session session, String[] args) {
         require(args.length >= 1, "usage: //stack <count> [direction]");
         require(session.hasSelection(), "no selection");
         int count = Integer.parseInt(args[0]);
         require(count > 0, "count must be > 0");
         String dirName = args.length > 1 ? args[1].toLowerCase() : "me";
-        Vec3 dir = MoveCmd.direction(player, dirName);
+        Vec3 dir = MoveCommand.direction(p, dirName);
 
         Region r = session.region();
         Level level = session.level();
         int w = r.width(), h = r.height(), l = r.length();
-
         BlockState[] snapshot = new BlockState[w * h * l];
         int idx = 0;
         for (int y = 0; y < h; y++)
@@ -32,7 +31,6 @@ public final class StackCmd extends Cmd {
                     snapshot[idx++] = level.getBlockStateAt(r.min().x() + x, r.min().y() + y, r.min().z() + z);
 
         Vec3 step = new Vec3(dir.x() * w, dir.y() * h, dir.z() * l);
-
         EditEngine.get().submit(level,
             es -> {
                 for (int rep = 1; rep <= count; rep++) {
@@ -49,8 +47,8 @@ public final class StackCmd extends Cmd {
                             }
                 }
             },
-            n -> player.sendMessage("§dFastEdit §7| stacked §f" + n + "§7 blocks."),
-            t -> player.sendMessage("§c[FastEdit] " + t.getMessage()),
+            n -> p.sendMessage("§dFastEdit §7| stacked §f" + n + "§7 blocks."),
+            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
         return true;
     }

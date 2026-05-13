@@ -4,70 +4,85 @@ import cn.nukkit.Player;
 import cn.nukkit.block.Block;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
+import cn.nukkit.event.block.BlockBreakEvent;
 import cn.nukkit.event.player.PlayerInteractEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.item.ItemID;
-import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.item.ItemWoodenAxe;
 import fr.fastedit.brush.Brush;
+import fr.fastedit.brush.Brushes;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 import fr.fastedit.session.SessionManager;
 
-public final class WandListener implements Listener {
+public class WandListener implements Listener {
 
-    public static final String WAND_ID = ItemID.WOODEN_AXE;
-    public static final String WAND_TAG = "fastedit:wand";
+    private static final int BRUSH_REACH = 256;
+    private static final long BRUSH_COOLDOWN_MS = 500;
 
     public static Item makeWand() {
-        Item axe = Item.get(WAND_ID);
+        Item axe = Item.get(ItemID.WOODEN_AXE);
         axe.setCustomName("§dFastEdit §7Wand");
-        CompoundTag tag = axe.hasCompoundTag() ? axe.getNamedTag() : new CompoundTag();
-        tag.putByte(WAND_TAG, 1);
-        axe.setNamedTag(tag);
         return axe;
     }
 
-    public static boolean isWand(Item item) {
-        if (item == null) return false;
-        if (!WAND_ID.equals(item.getId())) return false;
-        return item.hasCompoundTag() && item.getNamedTag().contains(WAND_TAG);
+    @EventHandler
+    public void onBreak(BlockBreakEvent event) {
+        if (event.getItem() instanceof ItemWoodenAxe) event.setCancelled(true);
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
+        Player p = event.getPlayer();
         Item item = event.getItem();
-        Block block = event.getBlock();
         if (item == null) return;
-        if (!player.hasPermission("fastedit.use")) return;
+        Session session = SessionManager.get().of(p);
 
-        Session session = SessionManager.get().of(player);
-
-        if (isWand(item)) {
-            if (block == null) return;
-            Vec3 v = new Vec3(block.getFloorX(), block.getFloorY(), block.getFloorZ());
+        if (item instanceof ItemWoodenAxe) {
+            Block b = event.getBlock();
+            if (b == null) return;
+            Vec3 v = new Vec3(b.getFloorX(), b.getFloorY(), b.getFloorZ());
             switch (event.getAction()) {
                 case LEFT_CLICK_BLOCK -> {
-                    session.setPos1(player.getLevel(), v);
-                    player.sendMessage("§dFastEdit §7| §fpos1 §7-> §a" + v);
                     event.setCancelled(true);
+                    if (v.equals(session.pos1())) return;
+                    session.setPos1(p.getLevel(), v);
+                    p.sendMessage("§dFastEdit §7| §fpos1 §7-> §a" + v);
                 }
                 case RIGHT_CLICK_BLOCK -> {
-                    session.setPos2(player.getLevel(), v);
-                    player.sendMessage("§dFastEdit §7| §fpos2 §7-> §a" + v);
                     event.setCancelled(true);
+                    if (v.equals(session.pos2())) return;
+                    session.setPos2(p.getLevel(), v);
+                    p.sendMessage("§dFastEdit §7| §fpos2 §7-> §a" + v);
                 }
                 default -> {}
             }
             return;
         }
 
-        Brush brush = session.brush();
-        if (brush == null) return;
-        if (event.getAction() != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK
-            && event.getAction() != PlayerInteractEvent.Action.RIGHT_CLICK_AIR) return;
-        if (block == null) return;
-        Vec3 v = new Vec3(block.getFloorX(), block.getFloorY(), block.getFloorZ());
-        brush.use(player, session, player.getLevel(), v);
+        if (!Brushes.hasBrush(item)) return;
+        var action = event.getAction();
+        if (action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK
+            && action != PlayerInteractEvent.Action.RIGHT_CLICK_AIR) return;
+
+        long now = System.currentTimeMillis();
+        if (now - session.lastBrushUseMs() < BRUSH_COOLDOWN_MS) return;
+        session.setLastBrushUseMs(now);
+
+        Block target = event.getBlock();
+        if (target == null || action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR) {
+            target = p.getTargetBlock(BRUSH_REACH);
+        }
+        if (target == null) {
+            p.sendMessage("§c[FastEdit] no block in sight.");
+            return;
+        }
+
+        try {
+            Brush brush = Brushes.fromItem(item, session);
+            brush.use(p, session, p.getLevel(), new Vec3(target.getFloorX(), target.getFloorY(), target.getFloorZ()));
+        } catch (IllegalArgumentException e) {
+            p.sendMessage("§c[FastEdit] " + e.getMessage());
+        }
     }
 }

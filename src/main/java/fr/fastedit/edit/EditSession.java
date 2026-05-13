@@ -9,16 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-/**
- * A planned edit: list of (pos, target state) tuples computed off the main
- * thread. The previous state is captured later, at apply time, so we never
- * touch the world from a background thread.
- *
- * An optional {@link #filter} runs on the main thread just before each write
- * — typically used by //replace to keep only positions whose current block
- * matches a mask.
- */
-public final class EditSession {
+public class EditSession {
 
     private final Level level;
     private final List<BlockChange> changes;

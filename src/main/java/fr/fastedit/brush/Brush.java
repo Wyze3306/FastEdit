@@ -12,15 +12,6 @@ import fr.fastedit.shape.Shapes;
 
 import java.util.function.Consumer;
 
-/**
- * A brush is a small synchronous edit centered on the block the player
- * clicked. The shape is generated, masked, then handed off to the EditEngine
- * apply queue which still slices the writes over multiple ticks if it has to.
- *
- * We don't use the async planner here because brushes are tiny and we need to
- * read the world (for masks / smoothing) — both jobs the main thread does
- * safely.
- */
 public abstract class Brush {
 
     protected final Pattern pattern;

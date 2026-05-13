@@ -7,15 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * A pattern decides which BlockState to place at a given position.
- *
- * Syntax (parsed by {@link #parse(String)}):
- *   stone                    single block
- *   minecraft:stone          single block (namespaced)
- *   50%stone,50%dirt         weighted random
- *   stone,dirt,grass_block   equal-weight random (treated as 1 each)
- */
 @FunctionalInterface
 public interface Pattern {
 
@@ -31,10 +22,7 @@ public interface Pattern {
         String s = input.trim();
         if (s.isEmpty()) throw new IllegalArgumentException("empty pattern");
 
-        if (!s.contains(",")) {
-            Token t = parseToken(s);
-            return single(t.state);
-        }
+        if (!s.contains(",")) return single(parseToken(s).state);
 
         String[] parts = s.split(",");
         List<Token> tokens = new ArrayList<>(parts.length);

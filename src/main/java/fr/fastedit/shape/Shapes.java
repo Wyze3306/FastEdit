@@ -7,11 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Pure shape generators. Each method calls {@code out} once per block that
- * belongs to the shape. They never touch the world, so they can run on any
- * thread.
- */
 public final class Shapes {
 
     private Shapes() {}
@@ -38,16 +33,12 @@ public final class Shapes {
         int r = (int) Math.ceil(radius);
         double rSq = radius * radius;
         double inner = (radius - 1) * (radius - 1);
-        for (int dy = -r; dy <= r; dy++) {
-            for (int dz = -r; dz <= r; dz++) {
+        for (int dy = -r; dy <= r; dy++)
+            for (int dz = -r; dz <= r; dz++)
                 for (int dx = -r; dx <= r; dx++) {
                     double d = dx * dx + dy * dy + dz * dz;
-                    if (d <= rSq && (!hollow || d > inner)) {
-                        out.accept(center.add(dx, dy, dz));
-                    }
+                    if (d <= rSq && (!hollow || d > inner)) out.accept(center.add(dx, dy, dz));
                 }
-            }
-        }
     }
 
     public static void cylinder(Vec3 base, double radius, int height, boolean hollow, Consumer<Vec3> out) {
@@ -55,27 +46,22 @@ public final class Shapes {
         double rSq = radius * radius;
         double inner = (radius - 1) * (radius - 1);
         int hi = Math.max(1, height);
-        for (int dy = 0; dy < hi; dy++) {
-            for (int dz = -r; dz <= r; dz++) {
+        for (int dy = 0; dy < hi; dy++)
+            for (int dz = -r; dz <= r; dz++)
                 for (int dx = -r; dx <= r; dx++) {
                     double d = dx * dx + dz * dz;
-                    if (d <= rSq && (!hollow || d > inner)) {
-                        out.accept(base.add(dx, dy, dz));
-                    }
+                    if (d <= rSq && (!hollow || d > inner)) out.accept(base.add(dx, dy, dz));
                 }
-            }
-        }
     }
 
     public static void pyramid(Vec3 base, int size, boolean hollow, Consumer<Vec3> out) {
         for (int dy = 0; dy < size; dy++) {
             int extent = size - dy - 1;
-            for (int dz = -extent; dz <= extent; dz++) {
+            for (int dz = -extent; dz <= extent; dz++)
                 for (int dx = -extent; dx <= extent; dx++) {
                     boolean edge = Math.abs(dx) == extent || Math.abs(dz) == extent || dy == 0 || dy == size - 1;
                     if (!hollow || edge) out.accept(base.add(dx, dy, dz));
                 }
-            }
         }
     }
 

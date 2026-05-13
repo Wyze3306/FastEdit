@@ -1,75 +1,76 @@
 package fr.fastedit;
 
-import cn.nukkit.command.Command;
+import cn.nukkit.command.CommandMap;
 import cn.nukkit.plugin.PluginBase;
-import fr.fastedit.command.BrushCmd;
-import fr.fastedit.command.CopyCmd;
-import fr.fastedit.command.CutCmd;
-import fr.fastedit.command.CylCmd;
-import fr.fastedit.command.FlipCmd;
-import fr.fastedit.command.MaskCmd;
-import fr.fastedit.command.MoveCmd;
-import fr.fastedit.command.PasteCmd;
-import fr.fastedit.command.Pos1Cmd;
-import fr.fastedit.command.Pos2Cmd;
-import fr.fastedit.command.PyramidCmd;
-import fr.fastedit.command.RedoCmd;
-import fr.fastedit.command.ReplaceCmd;
-import fr.fastedit.command.RotateCmd;
-import fr.fastedit.command.SchemCmd;
-import fr.fastedit.command.SelCmd;
-import fr.fastedit.command.SetCmd;
-import fr.fastedit.command.SizeCmd;
-import fr.fastedit.command.SphereCmd;
-import fr.fastedit.command.StackCmd;
-import fr.fastedit.command.UndoCmd;
-import fr.fastedit.command.WallsCmd;
-import fr.fastedit.command.WandCmd;
+import cn.nukkit.plugin.PluginManager;
+import fr.fastedit.command.BrushCommand;
+import fr.fastedit.command.CopyCommand;
+import fr.fastedit.command.CutCommand;
+import fr.fastedit.command.CylCommand;
+import fr.fastedit.command.FlipCommand;
+import fr.fastedit.command.MaskCommand;
+import fr.fastedit.command.MoveCommand;
+import fr.fastedit.command.PasteCommand;
+import fr.fastedit.command.Pos1Command;
+import fr.fastedit.command.Pos2Command;
+import fr.fastedit.command.PyramidCommand;
+import fr.fastedit.command.RedoCommand;
+import fr.fastedit.command.ReplaceCommand;
+import fr.fastedit.command.RotateCommand;
+import fr.fastedit.command.SchemCommand;
+import fr.fastedit.command.SelCommand;
+import fr.fastedit.command.SetCommand;
+import fr.fastedit.command.SizeCommand;
+import fr.fastedit.command.SphereCommand;
+import fr.fastedit.command.StackCommand;
+import fr.fastedit.command.UndoCommand;
+import fr.fastedit.command.WallsCommand;
+import fr.fastedit.command.WandCommand;
 import fr.fastedit.edit.EditEngine;
+import fr.fastedit.listener.CommandAliasListener;
 import fr.fastedit.listener.WandListener;
 
-public final class FastEdit extends PluginBase {
+public class FastEdit extends PluginBase {
 
-    private static FastEdit instance;
-    public static FastEdit get() { return instance; }
+    private static FastEdit INSTANCE;
+    public static FastEdit get() { return INSTANCE; }
 
     @Override
-    public void onLoad() { instance = this; }
+    public void onLoad() { INSTANCE = this; }
 
     @Override
     public void onEnable() {
         EditEngine.boot(this);
-        getServer().getPluginManager().registerEvents(new WandListener(), this);
-        registerCommands(
-            new WandCmd(),
-            new Pos1Cmd(),
-            new Pos2Cmd(),
-            new SelCmd(),
-            new SizeCmd(),
-            new SetCmd(),
-            new ReplaceCmd(),
-            new WallsCmd(),
-            new SphereCmd(),
-            new CylCmd(),
-            new PyramidCmd(),
-            new CopyCmd(),
-            new CutCmd(),
-            new PasteCmd(),
-            new RotateCmd(),
-            new FlipCmd(),
-            new MoveCmd(),
-            new StackCmd(),
-            new UndoCmd(),
-            new RedoCmd(),
-            new SchemCmd(),
-            new BrushCmd(),
-            new MaskCmd()
-        );
-        getLogger().info("§aFastEdit ready — try //wand.");
-    }
 
-    private void registerCommands(Command... commands) {
-        var map = getServer().getCommandMap();
-        for (Command c : commands) map.register("fastedit", c);
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new WandListener(), this);
+        pm.registerEvents(new CommandAliasListener(), this);
+
+        CommandMap map = getServer().getCommandMap();
+        map.register("fastedit", new WandCommand());
+        map.register("fastedit", new Pos1Command());
+        map.register("fastedit", new Pos2Command());
+        map.register("fastedit", new SelCommand());
+        map.register("fastedit", new SizeCommand());
+        map.register("fastedit", new SetCommand());
+        map.register("fastedit", new ReplaceCommand());
+        map.register("fastedit", new WallsCommand());
+        map.register("fastedit", new SphereCommand());
+        map.register("fastedit", new CylCommand());
+        map.register("fastedit", new PyramidCommand());
+        map.register("fastedit", new CopyCommand());
+        map.register("fastedit", new CutCommand());
+        map.register("fastedit", new PasteCommand());
+        map.register("fastedit", new RotateCommand());
+        map.register("fastedit", new FlipCommand());
+        map.register("fastedit", new MoveCommand());
+        map.register("fastedit", new StackCommand());
+        map.register("fastedit", new UndoCommand());
+        map.register("fastedit", new RedoCommand());
+        map.register("fastedit", new SchemCommand());
+        map.register("fastedit", new BrushCommand());
+        map.register("fastedit", new MaskCommand());
+
+        getLogger().info("§aFastEdit ready — //wand to start.");
     }
 }

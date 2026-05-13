@@ -6,18 +6,24 @@ FastAsyncWorldEdit-PNX, EasyEdit, and Axiom.
 
 ## What you get
 
-- **Selection** with a wooden axe (`//wand`) — left-click sets pos1,
-  right-click sets pos2. Or `//pos1` / `//pos2` at your feet.
-- **Shapes**: `//set`, `//replace`, `//walls`, `//sphere`, `//cyl`,
-  `//pyramid`.
-- **Clipboard**: `//copy`, `//cut`, `//paste`, `//rotate`, `//flip`.
-- **Schematics**: `//schem save/load/list` — gzipped NBT, plain
+- **Selection** with a wooden axe (`/wand`) — left-click sets pos1,
+  right-click sets pos2. Or `/pos1` / `/pos2` at your feet.
+- **Shapes**: `/set`, `/replace`, `/walls`, `/sphere`, `/cyl`,
+  `/pyramid`.
+- **Clipboard**: `/copy`, `/cut`, `/paste`, `/rotate`, `/flip`.
+- **Schematics**: `/schem save/load/list` — gzipped NBT, plain
   `.fschem` files under `plugins/FastEdit/schematics/`.
-- **Brushes**: `//brush sphere|cube|cyl|smooth|clipboard …`, with an
-  optional `//mask …`. Right-click anywhere to apply.
-- **Move / stack**: `//move <n> [dir]`, `//stack <n> [dir]`.
-- **Undo / redo**: `//undo [count]`, `//redo [count]` — keeps the last
+- **Brushes**: `/brush sphere|cube|cyl|smooth|clipboard …`, with an
+  optional `/mask …`. Right-click anywhere to apply.
+- **Move / stack**: `/move <n> [dir]`, `/stack <n> [dir]`.
+- **Undo / redo**: `/undo [count]`, `/redo [count]` — keeps the last
   20 edits per player.
+
+> Bedrock only accepts single-slash commands in its command UI, so
+> FastEdit registers `/wand`, `/set`, etc. The WorldEdit-style
+> double-slash (`//wand`, `//set`, …) still works — a preprocess
+> listener rewrites it transparently before dispatch. Use whichever
+> you prefer.
 
 ## How "async" works
 

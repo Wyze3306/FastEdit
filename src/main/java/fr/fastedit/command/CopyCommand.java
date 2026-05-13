@@ -8,19 +8,19 @@ import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
-public final class CopyCmd extends Cmd {
-    public CopyCmd() { super("/copy", "Copy the selection to your clipboard.", "//copy"); }
+public class CopyCommand extends FeCommand {
+    public CopyCommand() { super("copy", "Copy the selection to your clipboard."); }
 
     @Override
-    protected boolean run(Player player, Session session, String[] args) {
+    protected boolean run(Player p, Session session, String[] args) {
         require(session.hasSelection(), "no selection — set pos1/pos2 first");
         Region r = session.region();
         Level level = session.level();
         Clipboard clip = Clipboard.ofRegion(r);
         clip.setOffset(new Vec3(
-            player.getFloorX() - r.min().x(),
-            player.getFloorY() - r.min().y(),
-            player.getFloorZ() - r.min().z()));
+            p.getFloorX() - r.min().x(),
+            p.getFloorY() - r.min().y(),
+            p.getFloorZ() - r.min().z()));
 
         for (int y = 0; y < r.height(); y++)
             for (int z = 0; z < r.length(); z++)
@@ -30,7 +30,7 @@ public final class CopyCmd extends Cmd {
                 }
 
         session.setClipboard(clip);
-        player.sendMessage("§dFastEdit §7| copied §f" + r.volume() + "§7 blocks.");
+        p.sendMessage("§dFastEdit §7| copied §f" + r.volume() + "§7 blocks.");
         return true;
     }
 }
