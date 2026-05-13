@@ -1,0 +1,40 @@
+name: FastEdit
+main: fr.fastedit.FastEdit
+version: ${version}
+api: 2.0.0
+author: Linesia
+description: Async WorldEdit for PowerNukkitX — selection, brushes, schematics.
+load: POSTWORLD
+
+commands:
+  /wand:        { description: "Give the wooden axe (pos1 = left, pos2 = right)." }
+  /pos1:        { description: "Set position 1 to where you stand." }
+  /pos2:        { description: "Set position 2 to where you stand." }
+  /sel:         { description: "Show / clear current selection.", usage: "//sel [clear]" }
+  /size:        { description: "Show selection size and block count." }
+  /set:         { description: "Fill the selection with a pattern.", usage: "//set <pattern>" }
+  /replace:     { description: "Replace blocks matching a mask.", usage: "//replace <mask> <pattern>" }
+  /walls:       { description: "Walls of the selection.", usage: "//walls <pattern>" }
+  /sphere:      { description: "Sphere at your feet.", usage: "//sphere <pattern> <radius> [hollow]" }
+  /cyl:         { description: "Cylinder at your feet.", usage: "//cyl <pattern> <radius> <height> [hollow]" }
+  /pyramid:     { description: "Pyramid at your feet.", usage: "//pyramid <pattern> <size> [hollow]" }
+  /copy:        { description: "Copy the selection to your clipboard." }
+  /cut:         { description: "Copy + clear the selection." }
+  /paste:       { description: "Paste your clipboard at your feet.", usage: "//paste [-a]" }
+  /rotate:      { description: "Rotate the clipboard.", usage: "//rotate <90|180|270>" }
+  /flip:        { description: "Flip the clipboard.", usage: "//flip <x|y|z>" }
+  /move:        { description: "Move selection along a direction.", usage: "//move <amount> [direction]" }
+  /stack:       { description: "Stack the selection.", usage: "//stack <count> [direction]" }
+  /undo:        { description: "Undo the last edit.", usage: "//undo [count]" }
+  /redo:        { description: "Redo the last undone edit.", usage: "//redo [count]" }
+  /schem:       { description: "Schematic save/load/list.", usage: "//schem <save|load|list> [name]" }
+  /brush:       { description: "Bind a brush to the held item.", usage: "//brush <none|sphere|cube|cyl|smooth|clipboard> [pattern] [radius]" }
+  /mask:        { description: "Set the mask for the current brush.", usage: "//mask <mask|none>" }
+
+permissions:
+  fastedit.use:
+    default: op
+    description: Allow use of FastEdit commands and wand.
+  fastedit.schematic:
+    default: op
+    description: Save / load schematics.
