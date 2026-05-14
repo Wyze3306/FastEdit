@@ -7,8 +7,8 @@ import cn.nukkit.level.structure.StructureAPI;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.Tag;
-import cn.nukkit.registry.Registries;
 import fr.fastedit.FastEdit;
+import fr.fastedit.block.BlockAliases;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Vec3;
 
@@ -148,14 +148,17 @@ public final class SchematicIO {
             ? blocks.getByteArray("Data")
             : schem.getByteArray("BlockData");
 
-        BlockState[] idToState = buildPaletteArray(palette);
+        BlockState[] states = new BlockState[paletteSize(palette)];
+        String[] unknowns = new String[states.length];
+        buildPalette(palette, states, unknowns);
 
         Clipboard clip = new Clipboard(w, h, l);
         clip.setOffset(spongeOffset(schem));
 
         int cursor = 0;
         int i = 0;
-        while (cursor < blockData.length) {
+        long volume = (long) w * h * l;
+        while (cursor < blockData.length && i < volume) {
             int value = 0;
             int shift = 0;
             while (true) {
@@ -167,9 +170,12 @@ public final class SchematicIO {
             int x = i % w;
             int z = (i / w) % l;
             int y = i / (w * l);
-            if (i++ >= (long) w * h * l) break;
-            BlockState s = value >= 0 && value < idToState.length ? idToState[value] : null;
+            BlockState s = value >= 0 && value < states.length ? states[value] : null;
             clip.set(x, y, z, s == null ? Blocks.air() : s);
+            if (value >= 0 && value < unknowns.length && unknowns[value] != null) {
+                clip.setOriginal(x, y, z, unknowns[value]);
+            }
+            i++;
         }
         return clip;
     }
@@ -180,14 +186,34 @@ public final class SchematicIO {
         return new Vec3(-off[0], -off[1], -off[2]);
     }
 
-    private static BlockState[] buildPaletteArray(CompoundTag palette) {
+    private static int paletteSize(CompoundTag palette) {
         int max = 0;
         for (Map.Entry<String, Tag> e : palette.getEntrySet())
             max = Math.max(max, palette.getInt(e.getKey()) + 1);
-        BlockState[] arr = new BlockState[max];
-        for (Map.Entry<String, Tag> e : palette.getEntrySet())
-            arr[palette.getInt(e.getKey())] = javaToBedrock(e.getKey());
-        return arr;
+        return max;
+    }
+
+    private static void buildPalette(CompoundTag palette, BlockState[] states, String[] unknowns) {
+        for (Map.Entry<String, Tag> e : palette.getEntrySet()) {
+            int idx = palette.getInt(e.getKey());
+            String javaId = stripState(e.getKey());
+            String mapped = BlockAliases.translate(javaId);
+            BlockState st = Blocks.state(mapped);
+            if (st == null && !mapped.equals(javaId)) st = Blocks.state(javaId);
+            if (st == null) {
+                states[idx] = Blocks.placeholder();
+                unknowns[idx] = javaId;
+            } else {
+                states[idx] = st;
+            }
+        }
+    }
+
+    private static String stripState(String spec) {
+        int bracket = spec.indexOf('[');
+        String id = bracket < 0 ? spec : spec.substring(0, bracket);
+        if (!id.contains(":")) id = "minecraft:" + id;
+        return id;
     }
 
     private static Clipboard loadLegacy(File file) throws Exception {
@@ -209,24 +235,21 @@ public final class SchematicIO {
                         int half = add[idx / 2] & 0xFF;
                         id |= ((idx % 2 == 0 ? half & 0x0F : (half >> 4) & 0x0F) << 8);
                     }
-                    clip.set(x, y, z, legacyNumericToState(id));
+                    String javaId = LegacyIds.lookup(id);
+                    if (javaId == null) {
+                        clip.set(x, y, z, Blocks.placeholder());
+                        clip.setOriginal(x, y, z, "legacy:" + id);
+                    } else {
+                        BlockState st = Blocks.state(BlockAliases.translate(javaId));
+                        if (st == null) st = Blocks.state(javaId);
+                        if (st == null) {
+                            clip.set(x, y, z, Blocks.placeholder());
+                            clip.setOriginal(x, y, z, javaId);
+                        } else {
+                            clip.set(x, y, z, st);
+                        }
+                    }
                 }
         return clip;
-    }
-
-    private static BlockState javaToBedrock(String spec) {
-        int bracket = spec.indexOf('[');
-        String id = bracket < 0 ? spec : spec.substring(0, bracket);
-        if (!id.contains(":")) id = "minecraft:" + id;
-        var props = Registries.BLOCK.getBlockProperties(id);
-        if (props != null) return props.getDefaultState();
-        return Blocks.air();
-    }
-
-    private static BlockState legacyNumericToState(int id) {
-        String mapped = LegacyIds.lookup(id);
-        if (mapped == null) return Blocks.air();
-        var props = Registries.BLOCK.getBlockProperties(mapped);
-        return props == null ? Blocks.air() : props.getDefaultState();
     }
 }

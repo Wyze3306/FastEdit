@@ -3,6 +3,7 @@ package fr.fastedit.edit;
 import cn.nukkit.Server;
 import cn.nukkit.block.BlockState;
 import cn.nukkit.level.Level;
+import cn.nukkit.level.generator.object.BlockManager;
 import cn.nukkit.plugin.Plugin;
 import fr.fastedit.math.Vec3;
 
@@ -16,7 +17,7 @@ import java.util.function.Consumer;
 
 public class EditEngine {
 
-    public static final int BLOCKS_PER_TICK = 8_000;
+    public static final int BLOCKS_PER_TICK = 60_000;
 
     private static EditEngine INSTANCE;
     public static EditEngine get() { return INSTANCE; }
@@ -70,6 +71,11 @@ public class EditEngine {
     }
 
     private void tick() {
+        try { tickInner(); }
+        catch (Throwable t) { plugin.getLogger().error("[FastEdit] tick crashed: " + t.getMessage()); }
+    }
+
+    private void tickInner() {
         int budget = BLOCKS_PER_TICK;
         while (budget > 0) {
             PendingJob job;
@@ -82,14 +88,17 @@ public class EditEngine {
             Level lvl = job.session.level();
             var filter = job.session.filter();
 
+            BlockManager manager = new BlockManager(lvl);
             int written = 0;
             for (int i = from; i < to; i++) {
                 BlockChange c = list.get(i);
                 if (filter != null && !filter.test(lvl, c.pos)) { c.target = null; continue; }
                 c.previous = lvl.getBlockStateAt(c.pos.x(), c.pos.y(), c.pos.z());
-                lvl.setBlockStateAt(c.pos.x(), c.pos.y(), c.pos.z(), c.target);
+                manager.setBlockStateAt(c.pos.x(), c.pos.y(), c.pos.z(), c.target);
                 written++;
             }
+            if (written > 0) manager.applySubChunkUpdate();
+
             budget -= (to - from);
             job.applied += written;
             job.cursor = to;

@@ -3,6 +3,7 @@ package fr.fastedit.command;
 import cn.nukkit.Player;
 import cn.nukkit.block.BlockState;
 import fr.fastedit.clipboard.Clipboard;
+import fr.fastedit.clipboard.UnknownBlocks;
 import fr.fastedit.edit.EditEngine;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
@@ -14,8 +15,10 @@ public class PasteCommand extends FeCommand {
     protected boolean run(Player p, Session session, String[] args) {
         Clipboard clip = session.clipboard();
         require(clip != null, "your clipboard is empty — //copy first");
-        boolean pasteAir = args.length > 0 && args[0].equalsIgnoreCase("-a");
+        boolean skipAir = args.length > 0
+            && (args[0].equalsIgnoreCase("-noair") || args[0].equalsIgnoreCase("--skip-air"));
         Vec3 anchor = new Vec3(p.getFloorX(), p.getFloorY(), p.getFloorZ());
+        String worldName = p.getLevel().getName();
 
         EditEngine.get().submit(p.getLevel(),
             es -> {
@@ -25,14 +28,20 @@ public class PasteCommand extends FeCommand {
                         for (int x = 0; x < clip.width(); x++) {
                             BlockState s = clip.get(x, y, z);
                             if (s == null) continue;
-                            if (!pasteAir && "minecraft:air".equals(s.getIdentifier())) continue;
-                            es.plan(new Vec3(
-                                anchor.x() + x - off.x(),
-                                anchor.y() + y - off.y(),
-                                anchor.z() + z - off.z()), s);
+                            if (skipAir && "minecraft:air".equals(s.getIdentifier())) continue;
+                            int wx = anchor.x() + x - off.x();
+                            int wy = anchor.y() + y - off.y();
+                            int wz = anchor.z() + z - off.z();
+                            es.plan(new Vec3(wx, wy, wz), s);
+                            String orig = clip.original(x, y, z);
+                            if (orig != null) UnknownBlocks.record(worldName, wx, wy, wz, orig);
                         }
             },
-            n -> p.sendMessage("§dFastEdit §7| pasted §f" + n + "§7 blocks."),
+            n -> {
+                int u = clip.unknownCount();
+                String suffix = u > 0 ? " §7(§e" + u + " placeholders§7)" : "";
+                p.sendMessage("§dFastEdit §7| pasted §f" + n + "§7 blocks." + suffix);
+            },
             t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
             session.undo());
         return true;

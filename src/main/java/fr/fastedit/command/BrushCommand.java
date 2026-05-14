@@ -52,7 +52,9 @@ public class BrushCommand extends FeCommand {
             case "clipboard", "clip" -> {
                 require(session.clipboard() != null, "your clipboard is empty");
                 data.putString("kind", "clipboard");
-                data.putByte("pasteAir", args.length > 1 && args[1].equalsIgnoreCase("-a") ? 1 : 0);
+                boolean skipAir = args.length > 1
+                    && (args[1].equalsIgnoreCase("-noair") || args[1].equalsIgnoreCase("--skip-air"));
+                data.putByte("skipAir", skipAir ? 1 : 0);
             }
             default -> throw new IllegalArgumentException("unknown brush: " + kind);
         }

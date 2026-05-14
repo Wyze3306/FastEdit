@@ -48,7 +48,7 @@ public final class Brushes {
             case "clipboard" -> {
                 if (session.clipboard() == null)
                     throw new IllegalArgumentException("clipboard brush requires a clipboard — //copy first");
-                yield new ClipboardBrush(session.clipboard(), tag.getByte("pasteAir") == 1);
+                yield new ClipboardBrush(session.clipboard(), tag.getByte("skipAir") == 1);
             }
             default -> throw new IllegalArgumentException("unknown brush: " + kind);
         };

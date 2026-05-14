@@ -12,12 +12,12 @@ import java.util.function.Consumer;
 public final class ClipboardBrush extends Brush {
 
     private final Clipboard clipboard;
-    private final boolean pasteAir;
+    private final boolean skipAir;
 
-    public ClipboardBrush(Clipboard clipboard, boolean pasteAir) {
+    public ClipboardBrush(Clipboard clipboard, boolean skipAir) {
         super(v -> Blocks.air(), 1);
         this.clipboard = clipboard;
-        this.pasteAir = pasteAir;
+        this.skipAir = skipAir;
     }
 
     @Override public String kind() { return "clipboard"; }
@@ -32,7 +32,7 @@ public final class ClipboardBrush extends Brush {
                 for (int x = 0; x < clipboard.width(); x++) {
                     BlockState s = clipboard.get(x, y, z);
                     if (s == null) continue;
-                    if (!pasteAir && "minecraft:air".equals(s.getIdentifier())) continue;
+                    if (skipAir && "minecraft:air".equals(s.getIdentifier())) continue;
                     es.plan(new Vec3(hit.x() + x - off.x(), hit.y() + y - off.y(), hit.z() + z - off.z()), s);
                 }
     }

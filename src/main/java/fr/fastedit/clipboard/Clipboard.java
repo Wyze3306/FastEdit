@@ -5,10 +5,14 @@ import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Clipboard {
 
     private final int width, height, length;
     private final BlockState[] data;
+    private final Map<Integer, String> originals = new HashMap<>();
     private Vec3 offset;
 
     public Clipboard(int width, int height, int length) {
@@ -31,6 +35,14 @@ public class Clipboard {
     public BlockState get(int x, int y, int z) { return data[index(x, y, z)]; }
     public void set(int x, int y, int z, BlockState state) { data[index(x, y, z)] = state; }
 
+    public void setOriginal(int x, int y, int z, String javaId) {
+        if (javaId == null) originals.remove(index(x, y, z));
+        else originals.put(index(x, y, z), javaId);
+    }
+
+    public String original(int x, int y, int z) { return originals.get(index(x, y, z)); }
+    public int unknownCount() { return originals.size(); }
+
     public BlockState getOrAir(int x, int y, int z) {
         BlockState s = get(x, y, z);
         return s == null ? Blocks.air() : s;
@@ -44,8 +56,11 @@ public class Clipboard {
         Clipboard rotated = new Clipboard(length, height, width);
         for (int y = 0; y < height; y++)
             for (int z = 0; z < length; z++)
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < width; x++) {
                     rotated.set(length - 1 - z, y, x, get(x, y, z));
+                    String orig = original(x, y, z);
+                    if (orig != null) rotated.setOriginal(length - 1 - z, y, x, orig);
+                }
         Vec3 off = offset();
         rotated.setOffset(new Vec3(length - 1 - off.z(), off.y(), off.x()));
         return rotated;
@@ -60,6 +75,8 @@ public class Clipboard {
                     int ny = axis == 'y' ? height - 1 - y : y;
                     int nz = axis == 'z' ? length - 1 - z : z;
                     out.set(nx, ny, nz, get(x, y, z));
+                    String orig = original(x, y, z);
+                    if (orig != null) out.setOriginal(nx, ny, nz, orig);
                 }
         Vec3 off = offset();
         int ox = axis == 'x' ? width  - 1 - off.x() : off.x();
