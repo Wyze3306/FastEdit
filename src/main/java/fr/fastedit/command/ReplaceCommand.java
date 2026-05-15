@@ -23,7 +23,7 @@ public class ReplaceCommand extends FeCommand {
                 Shapes.cuboid(region, v -> es.plan(v, pattern.next(v)));
             },
             n -> p.sendMessage("§dFastEdit §7| replaced §f" + n + "§7 blocks."),
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());
         return true;
     }

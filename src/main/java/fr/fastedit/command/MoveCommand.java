@@ -47,7 +47,7 @@ public class MoveCommand extends FeCommand {
                         }
             },
             n -> p.sendMessage("§dFastEdit §7| moved §f" + n + "§7 blocks."),
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());
 
         session.setPos1(level, r.min().add(step));

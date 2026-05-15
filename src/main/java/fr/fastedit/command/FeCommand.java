@@ -23,11 +23,11 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
         try {
             return run(p, SessionManager.get().of(p), args);
         } catch (IllegalArgumentException e) {
-            p.sendMessage("§c[FastEdit] " + e.getMessage());
+            p.sendMessage("§c[FastEdit] " + describe(e));
             return true;
         } catch (Throwable t) {
-            p.sendMessage("§c[FastEdit] error: " + t.getMessage());
-            t.printStackTrace();
+            p.sendMessage("§c[FastEdit] error: " + describe(t));
+            FastEdit.get().getLogger().error("[FastEdit] command '" + label + "' failed", t);
             return true;
         }
     }
@@ -36,5 +36,16 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
 
     protected static void require(boolean cond, String msg) {
         if (!cond) throw new IllegalArgumentException(msg);
+    }
+
+    /** Never returns null — falls back to the exception class name when there is no message. */
+    protected static String describe(Throwable t) {
+        if (t == null) return "unknown error";
+        String msg = t.getMessage();
+        if (msg != null && !msg.isBlank()) return msg;
+        Throwable cause = t.getCause();
+        if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank())
+            return t.getClass().getSimpleName() + " (" + cause.getMessage() + ")";
+        return t.getClass().getSimpleName();
     }
 }

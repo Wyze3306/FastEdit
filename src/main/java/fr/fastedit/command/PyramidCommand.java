@@ -20,7 +20,7 @@ public class PyramidCommand extends FeCommand {
         EditEngine.get().submit(p.getLevel(),
             es -> Shapes.pyramid(base, size, hollow, v -> es.plan(v, pattern.next(v))),
             n -> p.sendMessage("§dFastEdit §7| pyramid §f" + n + "§7 blocks."),
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());
         return true;
     }

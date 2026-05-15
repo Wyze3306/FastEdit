@@ -62,6 +62,7 @@ public class EditEngine {
                     queue.addLast(new PendingJob(session, onDone, undoSink));
                 }
             } catch (Throwable t) {
+                plugin.getLogger().error("[FastEdit] edit planning failed", t);
                 Server.getInstance().getScheduler().scheduleTask(plugin,
                     () -> { if (onError != null) onError.accept(t); });
             }
@@ -86,7 +87,7 @@ public class EditEngine {
 
     private void tick() {
         try { tickInner(); }
-        catch (Throwable t) { plugin.getLogger().error("[FastEdit] tick crashed: " + t.getMessage()); }
+        catch (Throwable t) { plugin.getLogger().error("[FastEdit] tick crashed", t); }
     }
 
     private void tickInner() {

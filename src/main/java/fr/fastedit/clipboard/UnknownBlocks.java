@@ -57,13 +57,23 @@ public final class UnknownBlocks {
         }
     }
 
+    /**
+     * Records an unknown block in memory only. Call {@link #flush()} once after a
+     * batch (e.g. a paste) to persist — never persist per-block, that rewrites the
+     * whole .dat file on disk for every block and stalls/OOMs large pastes.
+     */
     public static void record(String world, int x, int y, int z, String javaId) {
-        record(world, x, y, z, javaId, true);
+        record(world, x, y, z, javaId, false);
+    }
+
+    /** Persists all recorded unknowns to disk. Safe to call repeatedly. */
+    public static void flush() {
+        save();
     }
 
     private static void record(String world, int x, int y, int z, String javaId, boolean persist) {
         if (world == null || javaId == null) return;
-        BY_WORLD.computeIfAbsent(world, k -> new HashMap<>()).put(pack(x, y, z), javaId);
+        BY_WORLD.computeIfAbsent(world, k -> new ConcurrentHashMap<>()).put(pack(x, y, z), javaId);
         if (persist) save();
     }
 

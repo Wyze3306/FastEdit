@@ -1,6 +1,7 @@
 package fr.fastedit.command;
 
 import cn.nukkit.Player;
+import fr.fastedit.FastEdit;
 import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.clipboard.SchematicIO;
 import fr.fastedit.session.Session;
@@ -27,7 +28,10 @@ public class SchemCommand extends FeCommand {
                 require(SchematicIO.exists(name), "no such schematic: " + name);
                 Clipboard c;
                 try { c = SchematicIO.load(name); }
-                catch (Exception e) { throw new IllegalArgumentException("load failed: " + e.getMessage()); }
+                catch (Exception e) {
+                    FastEdit.get().getLogger().error("[FastEdit] schem load '" + name + "' failed", e);
+                    throw new IllegalArgumentException("load failed: " + describe(e));
+                }
                 require(c != null, "failed to load: " + name);
                 session.setClipboard(c);
                 p.sendMessage("§dFastEdit §7| loaded §f" + name

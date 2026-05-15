@@ -48,7 +48,7 @@ public class StackCommand extends FeCommand {
                 }
             },
             n -> p.sendMessage("§dFastEdit §7| stacked §f" + n + "§7 blocks."),
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());
         return true;
     }

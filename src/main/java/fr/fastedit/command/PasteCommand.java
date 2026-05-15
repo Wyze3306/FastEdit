@@ -38,11 +38,12 @@ public class PasteCommand extends FeCommand {
                         }
             },
             n -> {
+                UnknownBlocks.flush();
                 int u = clip.unknownCount();
                 String suffix = u > 0 ? " §7(§e" + u + " placeholders§7)" : "";
                 p.sendMessage("§dFastEdit §7| pasted §f" + n + "§7 blocks." + suffix);
             },
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> { UnknownBlocks.flush(); p.sendMessage("§c[FastEdit] " + describe(t)); },
             session.undo());
         return true;
     }

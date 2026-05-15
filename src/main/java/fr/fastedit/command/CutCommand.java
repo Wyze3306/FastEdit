@@ -37,7 +37,7 @@ public class CutCommand extends FeCommand {
         EditEngine.get().submit(level,
             es -> Shapes.cuboid(r, v -> es.plan(v, air)),
             n -> p.sendMessage("§dFastEdit §7| cut §f" + n + "§7 blocks."),
-            t -> p.sendMessage("§c[FastEdit] " + t.getMessage()),
+            t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());
         return true;
     }
