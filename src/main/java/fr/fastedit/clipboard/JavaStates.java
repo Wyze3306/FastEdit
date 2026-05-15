@@ -14,28 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Best-effort Java → Bedrock block-state translation for Sponge {@code .schem}
- * palettes (e.g. {@code minecraft:oak_stairs[facing=east,half=top]}).
- *
- * <p>Strictly additive: introspects the target Bedrock block's real property
- * set and only sets properties it can map with confidence. Anything unknown
- * (exotic blocks, {@code waterlogged}, redstone wiring, multipart shapes,
- * legacy {@code .schematic} metadata) falls back to the block's default
- * state — i.e. the previous behaviour, never worse.</p>
- *
- * <p>Mapped: pillar axis (logs/pillars), stairs (facing+half → weirdo/upside),
- * slab top/bottom, horizontal/6-way facing (chests, furnaces, dispensers,
- * observers…), open bit (doors/trapdoors/gates), door upper/hinge bits.</p>
+ * Java → Bedrock block-state translation for Sponge {@code .schem} palettes.
+ * Strictly additive: only sets Bedrock properties it can map with confidence,
+ * anything else falls back to the block's default state (never worse than the
+ * old behaviour).
  */
 public final class JavaStates {
 
     private JavaStates() {}
 
-    /**
-     * Resolves a modern Java id (+ optional state map) to a Bedrock state:
-     * applies the {@link fr.fastedit.block.BlockAliases} id mapping then this
-     * translator, falling back to the un-aliased id. {@code null} if unknown.
-     */
     public static BlockState resolve(String javaId, Map<String, String> jp) {
         String mapped = fr.fastedit.block.BlockAliases.translate(javaId);
         BlockState st = apply(mapped, jp);
@@ -79,16 +66,14 @@ public final class JavaStates {
             }
         }
 
-        // Stairs/trapdoor vertical orientation.
         String half = jp.get("half");
         if (half != null) {
             if (byName.containsKey("upside_down_bit"))
                 add(byName, vals, "upside_down_bit", "top".equalsIgnoreCase(half));
-            if (byName.containsKey("upper_block_bit")) // doors: upper|lower
+            if (byName.containsKey("upper_block_bit"))
                 add(byName, vals, "upper_block_bit", "upper".equalsIgnoreCase(half));
         }
 
-        // Slabs.
         String type = jp.get("type");
         if (type != null && byName.containsKey("minecraft:vertical_half")) {
             if ("top".equalsIgnoreCase(type))
@@ -131,7 +116,7 @@ public final class JavaStates {
             case "west"  -> 1;
             case "south" -> 2;
             case "north" -> 3;
-            default      -> 0; // east
+            default      -> 0;
         };
     }
 
@@ -143,7 +128,7 @@ public final class JavaStates {
             case "north" -> 2;
             case "south" -> 3;
             case "west"  -> 4;
-            default      -> 5; // east
+            default      -> 5;
         };
     }
 

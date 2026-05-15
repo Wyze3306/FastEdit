@@ -43,11 +43,8 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
         if (!cond) throw new IllegalArgumentException(msg);
     }
 
-    // ---- in-game command hints (Bedrock autocomplete) --------------------
-    // These only feed the client's argument UI; the actual parsing stays the
-    // permissive WorldEdit-style String[] handling in each run().
-
-    /** Declares the single "default" argument layout shown in-game. */
+    // These only feed the Bedrock client's argument autocomplete; parsing
+    // stays the permissive WorldEdit-style String[] handling in each run().
     protected final void params(CommandParameter... p) {
         Map<String, CommandParameter[]> m = new LinkedHashMap<>();
         m.put("default", p);

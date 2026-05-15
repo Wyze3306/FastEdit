@@ -66,7 +66,6 @@ public final class UnknownBlocks {
         record(world, x, y, z, javaId, false);
     }
 
-    /** Persists all recorded unknowns to disk. Safe to call repeatedly. */
     public static void flush() {
         save();
     }

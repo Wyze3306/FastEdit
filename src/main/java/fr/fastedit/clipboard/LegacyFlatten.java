@@ -7,12 +7,8 @@ import java.util.Map;
 
 /**
  * Legacy 1.12 {@code (id, data)} → modern Java id + state, then Bedrock via
- * {@link JavaStates#resolve}. Covers the block families that actually carry
- * orientation/variant/colour in old {@code .schematic} files (stairs, logs,
- * slabs, wool/glass/clay/concrete/carpet colours, planks/leaves species,
- * doors/trapdoors, furnaces/chests/dispensers facing). Anything not handled
- * here falls through to {@link LegacyIds} (base id, default state) and finally
- * to a placeholder — never a hard failure.
+ * {@link JavaStates#resolve}. Unhandled blocks fall through to
+ * {@link LegacyIds} and finally a placeholder — never a hard failure.
  */
 final class LegacyFlatten {
 
@@ -35,7 +31,6 @@ final class LegacyFlatten {
     static BlockState translate(int id, int data) {
         int d = data & 0xFF;
         switch (id) {
-            // ---- colours -------------------------------------------------
             case 35:  return res(COLOR[d & 15] + "_wool");
             case 95:  return res(COLOR[d & 15] + "_stained_glass");
             case 160: return res(COLOR[d & 15] + "_stained_glass_pane");
@@ -44,7 +39,6 @@ final class LegacyFlatten {
             case 251: return res(COLOR[d & 15] + "_concrete");
             case 252: return res(COLOR[d & 15] + "_concrete_powder");
 
-            // ---- wood species -------------------------------------------
             case 5:   return res(WOOD[Math.min(d & 7, 5)] + "_planks");
             case 6:   return res(WOOD[Math.min(d & 7, 5)] + "_sapling");
             case 17:  return logState(WOOD[d & 3], d);
@@ -52,7 +46,7 @@ final class LegacyFlatten {
             case 18:  return res(WOOD[d & 3] + "_leaves");
             case 161: return res(((d & 1) == 0 ? "acacia" : "dark_oak") + "_leaves");
 
-            // ---- stairs (data: 0-3 facing, +4 = upside/top) --------------
+            // stair data: bits 0-1 = facing, bit 2 = upside-down
             case 53:  return stair("oak_stairs", d);
             case 67:  return stair("cobblestone_stairs", d);
             case 108: return stair("brick_stairs", d);
@@ -68,13 +62,12 @@ final class LegacyFlatten {
             case 180: return stair("red_sandstone_stairs", d);
             case 203: return stair("purpur_stairs", d);
 
-            // ---- slabs (bit 8 = top half) -------------------------------
+            // slab data: bit 3 (0x8) = top half
             case 44:  return slab(stoneSlab(d & 7), d);
             case 126: return slab(WOOD[Math.min(d & 7, 5)] + "_slab", d);
             case 182: return slab("red_sandstone_slab", d);
             case 205: return slab("purpur_slab", d);
 
-            // ---- doors (64 oak, 71 iron, 193-197 species) ---------------
             case 64:  return door("oak_door", d);
             case 71:  return door("iron_door", d);
             case 193: return door("spruce_door", d);
@@ -83,11 +76,10 @@ final class LegacyFlatten {
             case 196: return door("acacia_door", d);
             case 197: return door("dark_oak_door", d);
 
-            // ---- trapdoors ----------------------------------------------
             case 96:  return trapdoor("oak_trapdoor", d);
             case 167: return trapdoor("iron_trapdoor", d);
 
-            // ---- horizontal-facing blocks (data 2-5) --------------------
+            // horizontal facing: legacy data 2-5
             case 23:  return facing("dispenser", d);
             case 158: return facing("dropper", d);
             case 54:  return facing("chest", d);
@@ -101,8 +93,6 @@ final class LegacyFlatten {
             default:  return null;
         }
     }
-
-    // ---- helpers ----------------------------------------------------------
 
     private static BlockState res(String javaId) {
         return JavaStates.resolve("minecraft:" + javaId, Map.of());
@@ -129,11 +119,13 @@ final class LegacyFlatten {
     }
 
     private static BlockState door(String javaId, int d) {
+        // legacy door data: bit 3 = upper half; upper carries hinge (bit 0),
+        // lower carries open (bit 2)
         Map<String, String> p = new HashMap<>();
-        if ((d & 8) != 0) {                       // upper half
+        if ((d & 8) != 0) {
             p.put("half", "upper");
             p.put("hinge", (d & 1) != 0 ? "right" : "left");
-        } else {                                  // lower half
+        } else {
             p.put("half", "lower");
             p.put("open", String.valueOf((d & 4) != 0));
         }
