@@ -1,5 +1,6 @@
 package fr.fastedit.edit;
 
+import cn.nukkit.Player;
 import cn.nukkit.Server;
 import cn.nukkit.block.BlockState;
 import cn.nukkit.level.Level;
@@ -15,8 +16,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -109,6 +113,7 @@ public class EditEngine {
             final AtomicInteger outstanding = new AtomicInteger();
             final AtomicBoolean failed = new AtomicBoolean();
             final long txn = UndoBuffer.nextTxn();
+            final Set<Long> touched = ConcurrentHashMap.newKeySet();
             long total = 0;
             try {
                 boolean more = true;
@@ -123,12 +128,16 @@ public class EditEngine {
                     total += s.size();
                     outstanding.incrementAndGet();
                     Consumer<Integer> segDone = n -> outstanding.decrementAndGet();
-                    synchronized (queue) { queue.addLast(new PendingJob(s, segDone, undoSink, txn)); }
+                    synchronized (queue) {
+                        queue.addLast(new PendingJob(s, segDone, undoSink, txn, touched, false));
+                    }
                 }
                 while (outstanding.get() > 0) Thread.sleep(8);
                 final long applied = total;
-                Server.getInstance().getScheduler().scheduleTask(plugin,
-                    () -> { if (onDone != null) onDone.accept(applied); });
+                Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
+                    finalizeChunks(level, touched);          // persist+relight+resend once
+                    if (onDone != null) onDone.accept(applied);
+                });
             } catch (Throwable t) {
                 failed.set(true);
                 plugin.getLogger().error("[FastEdit] streaming edit failed", t);
@@ -201,8 +210,17 @@ public class EditEngine {
                 if (!lvl.isYInRange(y)) { c.target = null; continue; }
 
                 try {
-                    IChunk chunk = lvl.getChunk(x >> 4, z >> 4, true);
+                    int cx = x >> 4, cz = z >> 4;
+                    IChunk chunk = lvl.getChunk(cx, cz, true);
                     if (chunk == null) { c.target = null; continue; }
+
+                    // First touch of a chunk: mark it dirty so the edit is
+                    // persisted, and keep it loaded so far chunks of a big
+                    // schematic aren't evicted (blank) before the save.
+                    if (job.touched.add(chunkKey(cx, cz))) {
+                        chunk.setChanged();
+                        try { lvl.cancelUnloadChunkRequest(cx, cz); } catch (Throwable ignored) {}
+                    }
 
                     c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
                     chunk.setBlockState(x & 15, y, z & 15, c.target, 0);
@@ -242,6 +260,7 @@ public class EditEngine {
                     for (BlockChange c : list) if (c.target != null) kept.add(c);
                     job.undoSink.push(new UndoBuffer.Entry(lvl.getName(), kept, job.txn));
                 }
+                if (job.ownsFinalize) finalizeChunks(lvl, job.touched);
                 if (job.onDone != null) {
                     try { job.onDone.accept(job.applied); }
                     catch (Throwable t) { plugin.getLogger().error("[FastEdit] onDone threw: " + t.getMessage()); }
@@ -257,15 +276,42 @@ public class EditEngine {
         final Consumer<Integer> onDone;
         final UndoBuffer undoSink;
         final long txn;
+        /** Chunk keys touched by this job (shared across a streamed paste). */
+        final Set<Long> touched;
+        /** Whether THIS job finalises the chunks (false for streamed segments). */
+        final boolean ownsFinalize;
         int cursor;
         int applied;
 
         PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink) {
-            this(s, onDone, undoSink, UndoBuffer.nextTxn());
+            this(s, onDone, undoSink, UndoBuffer.nextTxn(), new HashSet<>(), true);
         }
 
-        PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink, long txn) {
-            this.session = s; this.onDone = onDone; this.undoSink = undoSink; this.txn = txn;
+        PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink,
+                   long txn, Set<Long> touched, boolean ownsFinalize) {
+            this.session = s; this.onDone = onDone; this.undoSink = undoSink;
+            this.txn = txn; this.touched = touched; this.ownsFinalize = ownsFinalize;
+        }
+    }
+
+    private static long chunkKey(int cx, int cz) {
+        return ((long) cx << 32) | (cz & 0xFFFFFFFFL);
+    }
+
+    /** Persist + relight + fully resend every touched chunk (main thread). */
+    private void finalizeChunks(Level lvl, Set<Long> touched) {
+        for (long key : touched) {
+            int cx = (int) (key >> 32);
+            int cz = (int) key;
+            IChunk c = lvl.getChunk(cx, cz, false);
+            if (c == null) continue;
+            try {
+                c.setChanged();
+                c.recalculateHeightMap();
+            } catch (Throwable ignored) {}
+            for (Player p : lvl.getChunkPlayers(cx, cz).values()) {
+                try { lvl.requestChunk(cx, cz, p); } catch (Throwable ignored) {}
+            }
         }
     }
 }
