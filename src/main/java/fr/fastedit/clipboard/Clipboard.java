@@ -13,6 +13,8 @@ public class Clipboard {
     private final int width, height, length;
     private final BlockState[] data;
     private final Map<Integer, String> originals = new HashMap<>();
+    /** Sparse layer-1 (waterlog) states, only for the few cells that need it. */
+    private final Map<Integer, BlockState> liquid = new HashMap<>();
     private Vec3 offset;
 
     public Clipboard(int width, int height, int length) {
@@ -42,6 +44,12 @@ public class Clipboard {
 
     public String original(int x, int y, int z) { return originals.get(index(x, y, z)); }
     public int unknownCount() { return originals.size(); }
+
+    public void setLiquid(int x, int y, int z, BlockState s) {
+        if (s == null) liquid.remove(index(x, y, z));
+        else liquid.put(index(x, y, z), s);
+    }
+    public BlockState liquid(int x, int y, int z) { return liquid.get(index(x, y, z)); }
 
     public BlockState getOrAir(int x, int y, int z) {
         BlockState s = get(x, y, z);

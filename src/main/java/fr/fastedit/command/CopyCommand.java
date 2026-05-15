@@ -25,8 +25,12 @@ public class CopyCommand extends FeCommand {
         for (int y = 0; y < r.height(); y++)
             for (int z = 0; z < r.length(); z++)
                 for (int x = 0; x < r.width(); x++) {
-                    BlockState s = level.getBlockStateAt(r.min().x() + x, r.min().y() + y, r.min().z() + z);
+                    int wx = r.min().x() + x, wy = r.min().y() + y, wz = r.min().z() + z;
+                    BlockState s = level.getBlockStateAt(wx, wy, wz);
                     clip.set(x, y, z, s);
+                    BlockState l1 = level.getBlockStateAt(wx, wy, wz, 1);
+                    if (l1 != null && "minecraft:water".equals(l1.getIdentifier()))
+                        clip.setLiquid(x, y, z, l1);
                 }
 
         session.setClipboard(clip);

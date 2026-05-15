@@ -31,6 +31,11 @@ public class EditSession {
         changes.add(new BlockChange(pos, target));
     }
 
+    public void plan(Vec3 pos, BlockState target, BlockState layer1) {
+        if (target == null) return;
+        changes.add(new BlockChange(pos, target, layer1));
+    }
+
     public void planAll(Iterable<Vec3> positions, Pattern pattern) {
         for (Vec3 v : positions) plan(v, pattern.next(v));
     }

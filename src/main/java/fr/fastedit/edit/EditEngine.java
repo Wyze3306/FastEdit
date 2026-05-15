@@ -149,14 +149,31 @@ public class EditEngine {
         for (BlockChange c : changes) {
             BlockState target = forward ? c.target : c.previous;
             if (target == null) continue;
-            s.plan(c.pos, target);
+            BlockState l1;
+            if (forward) {
+                l1 = c.layer1;
+            } else if (c.layer1 != null) {
+                // undo: restore the water we displaced, or clear it if none
+                l1 = c.prevLayer1 != null ? c.prevLayer1 : fr.fastedit.block.Blocks.air();
+            } else {
+                l1 = null;
+            }
+            s.plan(c.pos, target, l1);
         }
         apply(s, null, onDone);
     }
 
     private void tick() {
         try { tickInner(); }
-        catch (Throwable t) { plugin.getLogger().error("[FastEdit] tick crashed", t); }
+        catch (Throwable t) {
+            // Never let a poison job sit at the head and re-crash every tick.
+            PendingJob bad;
+            synchronized (queue) { bad = queue.pollFirst(); }
+            plugin.getLogger().error("[FastEdit] tick crashed — dropped 1 job", t);
+            if (bad != null && bad.onDone != null) {
+                try { bad.onDone.accept(bad.applied); } catch (Throwable ignored) {}
+            }
+        }
     }
 
     private void tickInner() {
@@ -178,23 +195,35 @@ public class EditEngine {
                 BlockChange c = list.get(i);
                 int x = c.pos.x(), y = c.pos.y(), z = c.pos.z();
                 if (filter != null && !filter.test(lvl, c.pos)) { c.target = null; continue; }
+                // Out-of-world Y (clipboard pasted near build limits) must be
+                // skipped — indexing a sub-chunk past its range threw AIOOBE,
+                // crashed the tick, and the job span the queue forever.
+                if (!lvl.isYInRange(y)) { c.target = null; continue; }
 
-                IChunk chunk = lvl.getChunk(x >> 4, z >> 4, true);
-                if (chunk == null) { c.target = null; continue; }
+                try {
+                    IChunk chunk = lvl.getChunk(x >> 4, z >> 4, true);
+                    if (chunk == null) { c.target = null; continue; }
 
-                c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
-                chunk.setBlockState(x & 15, y, z & 15, c.target, 0);
-                written++;
+                    c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
+                    chunk.setBlockState(x & 15, y, z & 15, c.target, 0);
+                    if (c.layer1 != null) {
+                        c.prevLayer1 = chunk.getBlockState(x & 15, y, z & 15, 1);
+                        chunk.setBlockState(x & 15, y, z & 15, c.layer1, 1);
+                    }
+                    written++;
 
-                SubKey key = new SubKey(x >> 4, y >> 4, z >> 4);
-                UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key,
-                    k -> new UpdateSubChunkBlocksPacket(k.cx << 4, k.sy << 4, k.cz << 4));
-                pkt.standardBlocks.add(new BlockChangeEntry(
-                    new BlockVector3(x, y, z),
-                    c.target.unsignedBlockStateHash(),
-                    UpdateBlockPacket.FLAG_ALL,
-                    -1,
-                    BlockChangeEntry.MessageType.NONE));
+                    SubKey key = new SubKey(x >> 4, y >> 4, z >> 4);
+                    UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key,
+                        k -> new UpdateSubChunkBlocksPacket(k.cx << 4, k.sy << 4, k.cz << 4));
+                    pkt.standardBlocks.add(new BlockChangeEntry(
+                        new BlockVector3(x, y, z),
+                        c.target.unsignedBlockStateHash(),
+                        UpdateBlockPacket.FLAG_ALL,
+                        -1,
+                        BlockChangeEntry.MessageType.NONE));
+                } catch (Throwable perBlock) {
+                    c.target = null; // drop this block, keep the edit going
+                }
             }
 
             for (var entry : packets.entrySet()) {

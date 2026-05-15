@@ -9,9 +9,11 @@ public final class Blocks {
     private Blocks() {}
 
     public static final String AIR_ID         = "minecraft:air";
+    public static final String WATER_ID       = "minecraft:water";
     public static final String PLACEHOLDER_ID = "minecraft:magenta_wool";
 
     public static BlockState air()         { return state(AIR_ID); }
+    public static BlockState water()       { BlockState s = state(WATER_ID); return s == null ? air() : s; }
     public static BlockState placeholder() {
         BlockState s = state(PLACEHOLDER_ID);
         return s == null ? air() : s;

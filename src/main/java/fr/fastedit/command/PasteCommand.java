@@ -41,7 +41,7 @@ public class PasteCommand extends FeCommand {
                 int wx = anchor.x() + x - off.x();
                 int wy = anchor.y() + y - off.y();
                 int wz = anchor.z() + z - off.z();
-                es.plan(new Vec3(wx, wy, wz), s);
+                es.plan(new Vec3(wx, wy, wz), s, clip.liquid(x, y, z));
                 String orig = clip.original(x, y, z);
                 if (orig != null) UnknownBlocks.record(worldName, wx, wy, wz, orig);
                 planned++;

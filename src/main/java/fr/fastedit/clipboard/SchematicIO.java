@@ -148,7 +148,8 @@ public final class SchematicIO {
 
         BlockState[] states = new BlockState[paletteSize(palette)];
         String[] unknowns = new String[states.length];
-        buildPalette(palette, states, unknowns);
+        boolean[] waterlogged = new boolean[states.length];
+        buildPalette(palette, states, unknowns, waterlogged);
 
         Clipboard clip = new Clipboard(w, h, l);
         clip.setOffset(spongeOffset(schem));
@@ -173,6 +174,9 @@ public final class SchematicIO {
             if (value >= 0 && value < unknowns.length && unknowns[value] != null) {
                 clip.setOriginal(x, y, z, unknowns[value]);
             }
+            if (value >= 0 && value < waterlogged.length && waterlogged[value]) {
+                clip.setLiquid(x, y, z, Blocks.water());
+            }
             i++;
         }
         return clip;
@@ -193,11 +197,16 @@ public final class SchematicIO {
         return max;
     }
 
-    private static void buildPalette(RawNbt.Map palette, BlockState[] states, String[] unknowns) {
+    private static void buildPalette(RawNbt.Map palette, BlockState[] states,
+                                     String[] unknowns, boolean[] waterlogged) {
         for (Map.Entry<String, Object> e : palette.entrySet()) {
             int idx = e.getValue() instanceof Number n ? n.intValue() : 0;
             String javaId = stripState(e.getKey());
             Map<String, String> jp = parseProps(e.getKey());
+            if (idx >= 0 && idx < waterlogged.length)
+                waterlogged[idx] = "true".equalsIgnoreCase(jp.get("waterlogged"))
+                    || javaId.endsWith(":kelp") || javaId.endsWith(":seagrass")
+                    || javaId.endsWith(":tall_seagrass") || javaId.endsWith(":bubble_column");
             String mapped = BlockAliases.translate(javaId);
             BlockState st = JavaStates.apply(mapped, jp);
             if (st == null && !mapped.equals(javaId)) st = JavaStates.apply(javaId, jp);
