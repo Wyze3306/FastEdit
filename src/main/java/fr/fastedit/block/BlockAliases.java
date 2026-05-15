@@ -52,7 +52,7 @@ public final class BlockAliases {
         put("purpur_block",           "purpur_block");
         put("redstone_lamp",          "redstone_lamp");
         put("lit_redstone_lamp",      "lit_redstone_lamp");
-        put("snow",                   "snow");
+        put("snow",                   "snow_layer");
         put("snow_block",             "snow");
         put("mob_spawner",            "mob_spawner");
         put("monster_egg",            "infested_stone");
@@ -80,6 +80,38 @@ public final class BlockAliases {
         put("redstone_wire",          "redstone_wire");
         put("piston_head",            "piston_arm_collision");
         put("sticky_piston_head",     "sticky_piston_arm_collision");
+
+        // Modern Java → Bedrock identifier renames (id differs, not just state).
+        put("rooted_dirt",            "dirt_with_roots");
+        put("dirt_path",              "grass_path");
+        put("lily_pad",               "waterlily");
+        put("cobweb",                 "web");
+        put("dead_bush",              "deadbush");
+        put("melon",                  "melon_block");
+        put("nether_quartz_ore",      "quartz_ore");
+        put("magma_block",            "magma");
+        put("note_block",             "noteblock");
+        put("slime_block",            "slime");
+        put("sugar_cane",             "reeds");
+        put("beetroots",              "beetroot");
+        put("powered_rail",           "golden_rail");
+        put("tripwire",               "trip_wire");
+        put("cobblestone_stairs",     "stone_stairs");
+        put("light",                  "light_block");
+        put("small_dripleaf",         "small_dripleaf_block");
+        put("big_dripleaf_stem",      "big_dripleaf");
+        put("waxed_copper_block",     "waxed_copper");
+        put("spawner",                "mob_spawner");
+        put("monster_spawner",        "mob_spawner");
+        put("frogspawn",              "frog_spawn");
+        // PNX 2.0 keeps split powered/unpowered redstone ids — override the
+        // earlier collapsing aliases so the lit/unlit state is preserved.
+        put("repeater",               "unpowered_repeater");
+        put("comparator",             "unpowered_comparator");
+        put("powered_comparator",     "powered_comparator");
+        put("unpowered_comparator",   "unpowered_comparator");
+        put("powered_repeater",       "powered_repeater");
+        put("unpowered_repeater",     "unpowered_repeater");
     }
 
     private static void put(String javaName, String bedrockName) {
