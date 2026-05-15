@@ -200,6 +200,7 @@ public class EditEngine {
 
             Map<SubKey, UpdateSubChunkBlocksPacket> packets = new HashMap<>();
             int written = 0;
+            int lastCx = Integer.MIN_VALUE, lastCz = Integer.MIN_VALUE;
             for (int i = from; i < to; i++) {
                 BlockChange c = list.get(i);
                 int x = c.pos.x(), y = c.pos.y(), z = c.pos.z();
@@ -214,12 +215,15 @@ public class EditEngine {
                     IChunk chunk = lvl.getChunk(cx, cz, true);
                     if (chunk == null) { c.target = null; continue; }
 
-                    // First touch of a chunk: mark it dirty so the edit is
-                    // persisted, and keep it loaded so far chunks of a big
-                    // schematic aren't evicted (blank) before the save.
-                    if (job.touched.add(chunkKey(cx, cz))) {
+                    // Re-mark on every entry, not just the first: PNX's GC
+                    // saves only hasChanged() chunks, so blocks written to a
+                    // chunk evicted+reloaded by a later segment are otherwise
+                    // dropped (whole bands of a big schematic vanished).
+                    if (cx != lastCx || cz != lastCz) {
                         chunk.setChanged();
+                        job.touched.add(chunkKey(cx, cz));
                         try { lvl.cancelUnloadChunkRequest(cx, cz); } catch (Throwable ignored) {}
+                        lastCx = cx; lastCz = cz;
                     }
 
                     c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
@@ -303,11 +307,14 @@ public class EditEngine {
         for (long key : touched) {
             int cx = (int) (key >> 32);
             int cz = (int) key;
-            IChunk c = lvl.getChunk(cx, cz, false);
+            // true: reload a chunk GC-evicted before finalize so it is still
+            // relit and resent (skipping null left bands stale client-side).
+            IChunk c = lvl.getChunk(cx, cz, true);
             if (c == null) continue;
             try {
                 c.setChanged();
                 c.recalculateHeightMap();
+                lvl.cancelUnloadChunkRequest(cx, cz);
             } catch (Throwable ignored) {}
             for (Player p : lvl.getChunkPlayers(cx, cz).values()) {
                 try { lvl.requestChunk(cx, cz, p); } catch (Throwable ignored) {}
