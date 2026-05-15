@@ -24,10 +24,47 @@ public final class JavaStates {
     private JavaStates() {}
 
     public static BlockState resolve(String javaId, Map<String, String> jp) {
-        String mapped = fr.fastedit.block.BlockAliases.translate(javaId);
-        BlockState st = apply(mapped, jp);
-        if (st == null && !mapped.equals(javaId)) st = apply(javaId, jp);
-        return st;
+        for (String cand : candidates(javaId)) {
+            // Only attempt ids the live registry actually has, so a wrong
+            // guess is skipped instead of mis-placing a block.
+            if (BedrockIds.ready() && !BedrockIds.has(cand)) continue;
+            BlockState st = apply(cand, jp);
+            if (st != null) return st;
+        }
+        return null;
+    }
+
+    /** Ordered Bedrock-id candidates for a Java id (most specific first). */
+    private static List<String> candidates(String javaId) {
+        String id = javaId.startsWith("minecraft:") ? javaId.substring(10) : javaId;
+        List<String> out = new ArrayList<>(6);
+        String aliased = fr.fastedit.block.BlockAliases.translate(javaId);
+        out.add(aliased);
+        if (!aliased.equals(javaId)) out.add(javaId);
+
+        // Sign / oak-prefix / seagrass naming differences (Bedrock drops the
+        // "oak_" on vanilla wood blocks and writes dark oak as "darkoak").
+        if (id.endsWith("_wall_sign") || id.endsWith("_sign")) {
+            boolean wall = id.endsWith("_wall_sign");
+            String wood = id.substring(0, id.length() - (wall ? 10 : 5));
+            String suffix = wall ? "_wall_sign" : "_standing_sign";
+            if (wood.equals("oak")) out.add("minecraft:" + (wall ? "wall_sign" : "standing_sign"));
+            else if (wood.equals("dark_oak")) out.add("minecraft:darkoak" + suffix);
+            else out.add("minecraft:" + wood + suffix);
+        }
+        if (id.startsWith("oak_")) {
+            String rest = id.substring(4);
+            out.add("minecraft:" + rest);                // oak_trapdoor → trapdoor
+            switch (rest) {
+                case "button"         -> out.add("minecraft:wooden_button");
+                case "door"           -> out.add("minecraft:wooden_door");
+                case "pressure_plate" -> out.add("minecraft:wooden_pressure_plate");
+                case "fence"          -> out.add("minecraft:fence");
+                default -> {}
+            }
+        }
+        if (id.equals("tall_seagrass")) out.add("minecraft:seagrass");
+        return out;
     }
 
     /** @return a Bedrock {@link BlockState}, or {@code null} if the id is unknown. */

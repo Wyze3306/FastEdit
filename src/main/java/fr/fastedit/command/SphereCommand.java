@@ -9,7 +9,7 @@ import fr.fastedit.shape.Shapes;
 
 public class SphereCommand extends FeCommand {
     public SphereCommand() { super("sphere", "Sphere at your feet.");
-        params(txt("pattern", false), dec("radius", false), enm("hollow", true, "hollow"));
+        params(block("pattern", false), dec("radius", false), enm("hollow", true, "hollow"));
     }
 
     @Override

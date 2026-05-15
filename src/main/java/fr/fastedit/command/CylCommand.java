@@ -9,7 +9,7 @@ import fr.fastedit.shape.Shapes;
 
 public class CylCommand extends FeCommand {
     public CylCommand() { super("cyl", "Cylinder at your feet.");
-        params(txt("pattern", false), dec("radius", false), num("height", false), enm("hollow", true, "hollow"));
+        params(block("pattern", false), dec("radius", false), num("height", false), enm("hollow", true, "hollow"));
     }
 
     @Override

@@ -8,7 +8,7 @@ import fr.fastedit.shape.Shapes;
 
 public class SetCommand extends FeCommand {
     public SetCommand() { super("set", "Fill the selection with a pattern.");
-        params(txt("pattern", false));
+        params(block("pattern", false));
     }
 
     @Override

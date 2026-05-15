@@ -63,6 +63,13 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
     protected static CommandParameter enm(String name, boolean optional, String... values) {
         return CommandParameter.newEnum(name, optional, values);
     }
+    /** Every Bedrock block id as a suggestion list; falls back to free text. */
+    protected static CommandParameter block(String name, boolean optional) {
+        String[] ids = fr.fastedit.clipboard.BedrockIds.names();
+        return ids.length == 0
+            ? txt(name, optional)
+            : CommandParameter.newEnum(name, optional, ids);
+    }
 
     /** Never returns null — falls back to the exception class name when there is no message. */
     protected static String describe(Throwable t) {

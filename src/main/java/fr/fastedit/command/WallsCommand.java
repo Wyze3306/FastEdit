@@ -8,7 +8,7 @@ import fr.fastedit.shape.Shapes;
 
 public class WallsCommand extends FeCommand {
     public WallsCommand() { super("walls", "Walls of the selection.");
-        params(txt("pattern", false));
+        params(block("pattern", false));
     }
 
     @Override

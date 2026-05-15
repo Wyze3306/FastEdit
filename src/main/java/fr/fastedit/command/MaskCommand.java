@@ -9,7 +9,7 @@ import fr.fastedit.session.Session;
 
 public class MaskCommand extends FeCommand {
     public MaskCommand() { super("mask", "Set the mask for the brush on the held shovel.");
-        params(txt("mask", true));
+        params(block("mask", true));
     }
 
     @Override

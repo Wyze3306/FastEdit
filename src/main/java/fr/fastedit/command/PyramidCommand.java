@@ -9,7 +9,7 @@ import fr.fastedit.shape.Shapes;
 
 public class PyramidCommand extends FeCommand {
     public PyramidCommand() { super("pyramid", "Pyramid at your feet.");
-        params(txt("pattern", false), num("size", false), enm("hollow", true, "hollow"));
+        params(block("pattern", false), num("size", false), enm("hollow", true, "hollow"));
     }
 
     @Override

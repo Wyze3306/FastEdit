@@ -9,7 +9,7 @@ import fr.fastedit.shape.Shapes;
 
 public class ReplaceCommand extends FeCommand {
     public ReplaceCommand() { super("replace", "Replace blocks matching a mask.");
-        params(txt("mask", false), txt("pattern", false));
+        params(block("mask", false), block("pattern", false));
     }
 
     @Override

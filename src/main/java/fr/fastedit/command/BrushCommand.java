@@ -9,7 +9,7 @@ import fr.fastedit.session.Session;
 
 public class BrushCommand extends FeCommand {
     public BrushCommand() { super("brush", "Bind a brush to the held shovel.");
-        params(enm("kind", false, "none","sphere","cube","cyl","smooth","clipboard"), txt("pattern", true), dec("radius", true));
+        params(enm("kind", false, "none","sphere","cube","cyl","smooth","clipboard"), block("pattern", true), dec("radius", true));
     }
 
     @Override

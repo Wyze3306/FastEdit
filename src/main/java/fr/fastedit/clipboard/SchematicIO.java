@@ -7,7 +7,6 @@ import cn.nukkit.level.structure.StructureAPI;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
 import fr.fastedit.FastEdit;
-import fr.fastedit.block.BlockAliases;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Vec3;
 
@@ -207,9 +206,7 @@ public final class SchematicIO {
                 waterlogged[idx] = "true".equalsIgnoreCase(jp.get("waterlogged"))
                     || javaId.endsWith(":kelp") || javaId.endsWith(":seagrass")
                     || javaId.endsWith(":tall_seagrass") || javaId.endsWith(":bubble_column");
-            String mapped = BlockAliases.translate(javaId);
-            BlockState st = JavaStates.apply(mapped, jp);
-            if (st == null && !mapped.equals(javaId)) st = JavaStates.apply(javaId, jp);
+            BlockState st = JavaStates.resolve(javaId, jp);
             if (st == null) {
                 states[idx] = Blocks.placeholder();
                 unknowns[idx] = e.getKey();

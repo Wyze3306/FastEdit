@@ -10,7 +10,7 @@ import fr.fastedit.session.Session;
 
 public class PasteCommand extends FeCommand {
     public PasteCommand() { super("paste", "Paste your clipboard at your feet.");
-        params(txt("flags", true));
+        params(enm("flags", true, "-noair", "--skip-air"));
     }
 
     @Override
