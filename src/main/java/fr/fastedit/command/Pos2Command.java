@@ -5,7 +5,9 @@ import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
 public class Pos2Command extends FeCommand {
-    public Pos2Command() { super("pos2", "Set position 2 to where you stand."); }
+    public Pos2Command() { super("pos2", "Set position 2 to where you stand.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

@@ -3,9 +3,14 @@ package fr.fastedit.command;
 import cn.nukkit.Player;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.command.PluginCommand;
+import cn.nukkit.command.data.CommandParamType;
+import cn.nukkit.command.data.CommandParameter;
 import fr.fastedit.FastEdit;
 import fr.fastedit.session.Session;
 import fr.fastedit.session.SessionManager;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public abstract class FeCommand extends PluginCommand<FastEdit> {
 
@@ -36,6 +41,30 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
 
     protected static void require(boolean cond, String msg) {
         if (!cond) throw new IllegalArgumentException(msg);
+    }
+
+    // ---- in-game command hints (Bedrock autocomplete) --------------------
+    // These only feed the client's argument UI; the actual parsing stays the
+    // permissive WorldEdit-style String[] handling in each run().
+
+    /** Declares the single "default" argument layout shown in-game. */
+    protected final void params(CommandParameter... p) {
+        Map<String, CommandParameter[]> m = new LinkedHashMap<>();
+        m.put("default", p);
+        setCommandParameters(m);
+    }
+
+    protected static CommandParameter txt(String name, boolean optional) {
+        return CommandParameter.newType(name, optional, CommandParamType.STRING);
+    }
+    protected static CommandParameter num(String name, boolean optional) {
+        return CommandParameter.newType(name, optional, CommandParamType.INT);
+    }
+    protected static CommandParameter dec(String name, boolean optional) {
+        return CommandParameter.newType(name, optional, CommandParamType.FLOAT);
+    }
+    protected static CommandParameter enm(String name, boolean optional, String... values) {
+        return CommandParameter.newEnum(name, optional, values);
     }
 
     /** Never returns null — falls back to the exception class name when there is no message. */

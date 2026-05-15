@@ -8,7 +8,9 @@ import fr.fastedit.brush.Brushes;
 import fr.fastedit.session.Session;
 
 public class MaskCommand extends FeCommand {
-    public MaskCommand() { super("mask", "Set the mask for the brush on the held shovel."); }
+    public MaskCommand() { super("mask", "Set the mask for the brush on the held shovel.");
+        params(txt("mask", true));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

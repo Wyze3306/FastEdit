@@ -9,7 +9,9 @@ import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
 public class StackCommand extends FeCommand {
-    public StackCommand() { super("stack", "Stack the selection along a direction."); }
+    public StackCommand() { super("stack", "Stack the selection along a direction.");
+        params(num("count", false), enm("direction", true, "me","north","south","east","west","up","down"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

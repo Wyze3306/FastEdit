@@ -5,7 +5,9 @@ import fr.fastedit.math.Region;
 import fr.fastedit.session.Session;
 
 public class SelCommand extends FeCommand {
-    public SelCommand() { super("sel", "Show or clear the current selection."); }
+    public SelCommand() { super("sel", "Show or clear the current selection.");
+        params(enm("action", true, "clear"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

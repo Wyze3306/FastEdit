@@ -5,7 +5,9 @@ import fr.fastedit.math.Region;
 import fr.fastedit.session.Session;
 
 public class SizeCommand extends FeCommand {
-    public SizeCommand() { super("size", "Show selection size and block count."); }
+    public SizeCommand() { super("size", "Show selection size and block count.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

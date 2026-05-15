@@ -9,7 +9,9 @@ import fr.fastedit.session.Session;
 import java.util.List;
 
 public class SchemCommand extends FeCommand {
-    public SchemCommand() { super("schem", "Schematic save/load/list (.mcstructure/.schem/.schematic)."); }
+    public SchemCommand() { super("schem", "Schematic save/load/list (.mcstructure/.schem/.schematic).");
+        params(enm("action", false, "save","load","list"), txt("name", true));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

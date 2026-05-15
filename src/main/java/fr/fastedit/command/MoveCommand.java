@@ -11,7 +11,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class MoveCommand extends FeCommand {
-    public MoveCommand() { super("move", "Move the selection along a direction."); }
+    public MoveCommand() { super("move", "Move the selection along a direction.");
+        params(num("amount", false), enm("direction", true, "me","north","south","east","west","up","down"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

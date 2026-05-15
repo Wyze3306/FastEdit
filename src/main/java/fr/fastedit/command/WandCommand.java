@@ -5,7 +5,9 @@ import fr.fastedit.listener.WandListener;
 import fr.fastedit.session.Session;
 
 public class WandCommand extends FeCommand {
-    public WandCommand() { super("wand", "Give the FastEdit wooden axe."); }
+    public WandCommand() { super("wand", "Give the FastEdit wooden axe.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

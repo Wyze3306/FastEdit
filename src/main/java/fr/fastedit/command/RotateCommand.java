@@ -5,7 +5,9 @@ import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.session.Session;
 
 public class RotateCommand extends FeCommand {
-    public RotateCommand() { super("rotate", "Rotate the clipboard."); }
+    public RotateCommand() { super("rotate", "Rotate the clipboard.");
+        params(enm("degrees", false, "90","180","270"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

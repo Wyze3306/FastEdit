@@ -8,7 +8,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class SphereCommand extends FeCommand {
-    public SphereCommand() { super("sphere", "Sphere at your feet."); }
+    public SphereCommand() { super("sphere", "Sphere at your feet.");
+        params(txt("pattern", false), dec("radius", false), enm("hollow", true, "hollow"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

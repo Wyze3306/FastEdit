@@ -10,7 +10,9 @@ public class InspectCommand extends FeCommand {
 
     public static final String INSPECTOR_TAG = "fastedit_inspector";
 
-    public InspectCommand() { super("inspect", "Give the FastEdit block-info stick."); }
+    public InspectCommand() { super("inspect", "Give the FastEdit block-info stick.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

@@ -8,7 +8,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class CylCommand extends FeCommand {
-    public CylCommand() { super("cyl", "Cylinder at your feet."); }
+    public CylCommand() { super("cyl", "Cylinder at your feet.");
+        params(txt("pattern", false), dec("radius", false), num("height", false), enm("hollow", true, "hollow"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

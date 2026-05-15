@@ -10,7 +10,9 @@ import fr.fastedit.session.Session;
 import java.util.List;
 
 public class UndoCommand extends FeCommand {
-    public UndoCommand() { super("undo", "Undo the last edit (whole structure)."); }
+    public UndoCommand() { super("undo", "Undo the last edit (whole structure).");
+        params(num("times", true));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

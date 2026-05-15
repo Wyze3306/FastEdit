@@ -7,7 +7,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class SetCommand extends FeCommand {
-    public SetCommand() { super("set", "Fill the selection with a pattern."); }
+    public SetCommand() { super("set", "Fill the selection with a pattern.");
+        params(txt("pattern", false));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

@@ -7,7 +7,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class WallsCommand extends FeCommand {
-    public WallsCommand() { super("walls", "Walls of the selection."); }
+    public WallsCommand() { super("walls", "Walls of the selection.");
+        params(txt("pattern", false));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

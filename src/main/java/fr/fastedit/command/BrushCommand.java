@@ -8,7 +8,9 @@ import fr.fastedit.brush.Brushes;
 import fr.fastedit.session.Session;
 
 public class BrushCommand extends FeCommand {
-    public BrushCommand() { super("brush", "Bind a brush to the held shovel."); }
+    public BrushCommand() { super("brush", "Bind a brush to the held shovel.");
+        params(enm("kind", false, "none","sphere","cube","cyl","smooth","clipboard"), txt("pattern", true), dec("radius", true));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

@@ -12,7 +12,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class CutCommand extends FeCommand {
-    public CutCommand() { super("cut", "Copy + clear the selection."); }
+    public CutCommand() { super("cut", "Copy + clear the selection.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

@@ -5,7 +5,9 @@ import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.session.Session;
 
 public class FlipCommand extends FeCommand {
-    public FlipCommand() { super("flip", "Flip the clipboard."); }
+    public FlipCommand() { super("flip", "Flip the clipboard.");
+        params(enm("axis", false, "x","y","z"));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

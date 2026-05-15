@@ -8,7 +8,9 @@ import fr.fastedit.session.Session;
 import fr.fastedit.shape.Shapes;
 
 public class ReplaceCommand extends FeCommand {
-    public ReplaceCommand() { super("replace", "Replace blocks matching a mask."); }
+    public ReplaceCommand() { super("replace", "Replace blocks matching a mask.");
+        params(txt("mask", false), txt("pattern", false));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

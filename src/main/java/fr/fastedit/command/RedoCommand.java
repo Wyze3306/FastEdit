@@ -10,7 +10,9 @@ import fr.fastedit.session.Session;
 import java.util.List;
 
 public class RedoCommand extends FeCommand {
-    public RedoCommand() { super("redo", "Redo the last undone edit (whole structure)."); }
+    public RedoCommand() { super("redo", "Redo the last undone edit (whole structure).");
+        params(num("times", true));
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {

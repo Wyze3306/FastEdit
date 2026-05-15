@@ -9,7 +9,9 @@ import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 
 public class CopyCommand extends FeCommand {
-    public CopyCommand() { super("copy", "Copy the selection to your clipboard."); }
+    public CopyCommand() { super("copy", "Copy the selection to your clipboard.");
+        params();
+    }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {
