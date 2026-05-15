@@ -19,12 +19,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class EditEngine {
 
-    public static final int BLOCKS_PER_TICK = 20_000;
-    public static final int MAX_EDIT_SIZE = 5_000_000;
+    public static final int BLOCKS_PER_TICK = 40_000;
+
+    /** Blocks materialised per streaming segment (one undo step each). */
+    public static final int SEGMENT_BLOCKS = 100_000;
+    /** Max segments queued-but-not-applied → bounds peak memory under load. */
+    public static final int MAX_PENDING_SEGMENTS = 8;
+
+    /** Plans the next slice of a large edit; lets huge edits run in bounded memory. */
+    public interface Segmenter {
+        /** Plan up to {@code maxBlocks} into {@code s}. Return true if more remain. */
+        boolean fill(EditSession s, int maxBlocks) throws Exception;
+    }
 
     private static EditEngine INSTANCE;
     public static EditEngine get() { return INSTANCE; }
@@ -51,10 +63,13 @@ public class EditEngine {
         planners.execute(() -> {
             try {
                 planner.accept(session);
-                if (session.size() > MAX_EDIT_SIZE) {
+                long cap = safeBlockCap();
+                if (session.size() > cap) {
                     Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
                         if (onError != null) onError.accept(new IllegalStateException(
-                            "edit too large (" + session.size() + " blocks, max " + MAX_EDIT_SIZE + ")"));
+                            "edit too large for free memory (" + session.size()
+                            + " blocks, ~" + cap + " safe right now) — split it or //paste "
+                            + "which streams big edits automatically"));
                     });
                     return;
                 }
@@ -63,6 +78,59 @@ public class EditEngine {
                 }
             } catch (Throwable t) {
                 plugin.getLogger().error("[FastEdit] edit planning failed", t);
+                Server.getInstance().getScheduler().scheduleTask(plugin,
+                    () -> { if (onError != null) onError.accept(t); });
+            }
+        });
+    }
+
+    /**
+     * Largest single non-streaming edit that comfortably fits in free heap right
+     * now (~96 B/change incl. undo retention, using ≤35 % of free memory). Never
+     * below 2M so normal selections always pass.
+     */
+    public static long safeBlockCap() {
+        Runtime r = Runtime.getRuntime();
+        long free = r.maxMemory() - (r.totalMemory() - r.freeMemory());
+        long cap = (long) (free * 0.35 / 96);
+        return Math.max(cap, 2_000_000L);
+    }
+
+    /**
+     * Applies an edit of <em>any</em> size without OOM: the {@link Segmenter} is
+     * pumped for {@link #SEGMENT_BLOCKS}-sized slices, each queued as its own job
+     * (one undo step), with back-pressure so at most {@link #MAX_PENDING_SEGMENTS}
+     * segments are in flight. Peak memory is bounded no matter the total volume.
+     */
+    public void submitStreaming(Level level, Segmenter seg,
+                                Consumer<Long> onDone, Consumer<Throwable> onError,
+                                UndoBuffer undoSink) {
+        planners.execute(() -> {
+            final AtomicInteger outstanding = new AtomicInteger();
+            final AtomicBoolean failed = new AtomicBoolean();
+            long total = 0;
+            try {
+                boolean more = true;
+                while (more) {
+                    EditSession s = new EditSession(level, Math.min(SEGMENT_BLOCKS, 1 << 16));
+                    more = seg.fill(s, SEGMENT_BLOCKS);
+                    if (s.size() == 0) continue;
+                    while (outstanding.get() >= MAX_PENDING_SEGMENTS) {
+                        if (failed.get()) return;
+                        Thread.sleep(4);
+                    }
+                    total += s.size();
+                    outstanding.incrementAndGet();
+                    Consumer<Integer> segDone = n -> outstanding.decrementAndGet();
+                    synchronized (queue) { queue.addLast(new PendingJob(s, segDone, undoSink)); }
+                }
+                while (outstanding.get() > 0) Thread.sleep(8);
+                final long applied = total;
+                Server.getInstance().getScheduler().scheduleTask(plugin,
+                    () -> { if (onDone != null) onDone.accept(applied); });
+            } catch (Throwable t) {
+                failed.set(true);
+                plugin.getLogger().error("[FastEdit] streaming edit failed", t);
                 Server.getInstance().getScheduler().scheduleTask(plugin,
                     () -> { if (onError != null) onError.accept(t); });
             }

@@ -20,23 +20,37 @@ public class PasteCommand extends FeCommand {
         Vec3 anchor = new Vec3(p.getFloorX(), p.getFloorY(), p.getFloorZ());
         String worldName = p.getLevel().getName();
 
-        EditEngine.get().submit(p.getLevel(),
-            es -> {
-                Vec3 off = clip.offset();
-                for (int y = 0; y < clip.height(); y++)
-                    for (int z = 0; z < clip.length(); z++)
-                        for (int x = 0; x < clip.width(); x++) {
-                            BlockState s = clip.get(x, y, z);
-                            if (s == null) continue;
-                            if (skipAir && "minecraft:air".equals(s.getIdentifier())) continue;
-                            int wx = anchor.x() + x - off.x();
-                            int wy = anchor.y() + y - off.y();
-                            int wz = anchor.z() + z - off.z();
-                            es.plan(new Vec3(wx, wy, wz), s);
-                            String orig = clip.original(x, y, z);
-                            if (orig != null) UnknownBlocks.record(worldName, wx, wy, wz, orig);
-                        }
-            },
+        final int W = clip.width(), H = clip.height(), L = clip.length();
+        final long volume = (long) W * H * L;
+        final Vec3 off = clip.offset();
+        final long[] cursor = {0};
+
+        // Streamed in bounded segments so a clipboard of any size cannot OOM.
+        EditEngine.Segmenter seg = (es, max) -> {
+            int planned = 0, scanned = 0, scanCap = max * 8;
+            long i = cursor[0];
+            while (i < volume && planned < max && scanned < scanCap) {
+                int x = (int) (i % W);
+                int z = (int) ((i / W) % L);
+                int y = (int) (i / ((long) W * L));
+                i++;
+                scanned++;
+                BlockState s = clip.get(x, y, z);
+                if (s == null) continue;
+                if (skipAir && "minecraft:air".equals(s.getIdentifier())) continue;
+                int wx = anchor.x() + x - off.x();
+                int wy = anchor.y() + y - off.y();
+                int wz = anchor.z() + z - off.z();
+                es.plan(new Vec3(wx, wy, wz), s);
+                String orig = clip.original(x, y, z);
+                if (orig != null) UnknownBlocks.record(worldName, wx, wy, wz, orig);
+                planned++;
+            }
+            cursor[0] = i;
+            return i < volume;
+        };
+
+        EditEngine.get().submitStreaming(p.getLevel(), seg,
             n -> {
                 UnknownBlocks.flush();
                 int u = clip.unknownCount();

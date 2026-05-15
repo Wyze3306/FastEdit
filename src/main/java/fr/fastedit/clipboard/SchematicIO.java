@@ -197,12 +197,13 @@ public final class SchematicIO {
         for (Map.Entry<String, Object> e : palette.entrySet()) {
             int idx = e.getValue() instanceof Number n ? n.intValue() : 0;
             String javaId = stripState(e.getKey());
+            Map<String, String> jp = parseProps(e.getKey());
             String mapped = BlockAliases.translate(javaId);
-            BlockState st = Blocks.state(mapped);
-            if (st == null && !mapped.equals(javaId)) st = Blocks.state(javaId);
+            BlockState st = JavaStates.apply(mapped, jp);
+            if (st == null && !mapped.equals(javaId)) st = JavaStates.apply(javaId, jp);
             if (st == null) {
                 states[idx] = Blocks.placeholder();
-                unknowns[idx] = javaId;
+                unknowns[idx] = e.getKey();
             } else {
                 states[idx] = st;
             }
@@ -214,6 +215,20 @@ public final class SchematicIO {
         String id = bracket < 0 ? spec : spec.substring(0, bracket);
         if (!id.contains(":")) id = "minecraft:" + id;
         return id;
+    }
+
+    /** Parses the {@code [k=v,k=v]} tail of a Java palette entry; {} if none. */
+    private static Map<String, String> parseProps(String spec) {
+        int open = spec.indexOf('[');
+        int close = spec.lastIndexOf(']');
+        if (open < 0 || close <= open) return Map.of();
+        Map<String, String> out = new HashMap<>();
+        for (String pair : spec.substring(open + 1, close).split(",")) {
+            int eq = pair.indexOf('=');
+            if (eq <= 0) continue;
+            out.put(pair.substring(0, eq).trim(), pair.substring(eq + 1).trim());
+        }
+        return out;
     }
 
     private static Clipboard loadLegacy(File file) throws Exception {
