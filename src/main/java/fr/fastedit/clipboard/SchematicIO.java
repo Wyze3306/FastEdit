@@ -6,13 +6,11 @@ import cn.nukkit.level.structure.Structure;
 import cn.nukkit.level.structure.StructureAPI;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
-import cn.nukkit.nbt.tag.Tag;
 import fr.fastedit.FastEdit;
 import fr.fastedit.block.BlockAliases;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Vec3;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -134,17 +132,17 @@ public final class SchematicIO {
     }
 
     private static Clipboard loadSponge(File file) throws Exception {
-        CompoundTag root = NBTIO.readCompressed(new ByteArrayInputStream(Files.readAllBytes(file.toPath())));
-        CompoundTag schem = root.contains("Schematic") ? root.getCompound("Schematic") : root;
+        RawNbt.Map root = RawNbt.read(Files.readAllBytes(file.toPath()));
+        RawNbt.Map schem = root.has("Schematic") ? root.getCompound("Schematic") : root;
         int w = schem.getShort("Width") & 0xFFFF;
         int h = schem.getShort("Height") & 0xFFFF;
         int l = schem.getShort("Length") & 0xFFFF;
 
-        CompoundTag blocks = schem.contains("Blocks") ? schem.getCompound("Blocks") : null;
-        CompoundTag palette = blocks != null && blocks.contains("Palette")
+        RawNbt.Map blocks  = schem.has("Blocks") ? schem.getCompound("Blocks") : null;
+        RawNbt.Map palette = blocks != null && blocks.has("Palette")
             ? blocks.getCompound("Palette")
             : schem.getCompound("Palette");
-        byte[] blockData = blocks != null && blocks.contains("Data")
+        byte[] blockData = blocks != null && blocks.has("Data")
             ? blocks.getByteArray("Data")
             : schem.getByteArray("BlockData");
 
@@ -180,22 +178,24 @@ public final class SchematicIO {
         return clip;
     }
 
-    private static Vec3 spongeOffset(CompoundTag schem) {
+    private static Vec3 spongeOffset(RawNbt.Map schem) {
         int[] off = schem.getIntArray("Offset");
         if (off == null || off.length < 3) return new Vec3(0, 0, 0);
         return new Vec3(-off[0], -off[1], -off[2]);
     }
 
-    private static int paletteSize(CompoundTag palette) {
+    private static int paletteSize(RawNbt.Map palette) {
         int max = 0;
-        for (Map.Entry<String, Tag> e : palette.getEntrySet())
-            max = Math.max(max, palette.getInt(e.getKey()) + 1);
+        for (Map.Entry<String, Object> e : palette.entrySet()) {
+            int v = e.getValue() instanceof Number n ? n.intValue() : 0;
+            if (v + 1 > max) max = v + 1;
+        }
         return max;
     }
 
-    private static void buildPalette(CompoundTag palette, BlockState[] states, String[] unknowns) {
-        for (Map.Entry<String, Tag> e : palette.getEntrySet()) {
-            int idx = palette.getInt(e.getKey());
+    private static void buildPalette(RawNbt.Map palette, BlockState[] states, String[] unknowns) {
+        for (Map.Entry<String, Object> e : palette.entrySet()) {
+            int idx = e.getValue() instanceof Number n ? n.intValue() : 0;
             String javaId = stripState(e.getKey());
             String mapped = BlockAliases.translate(javaId);
             BlockState st = Blocks.state(mapped);
@@ -217,13 +217,13 @@ public final class SchematicIO {
     }
 
     private static Clipboard loadLegacy(File file) throws Exception {
-        CompoundTag root = NBTIO.readCompressed(new ByteArrayInputStream(Files.readAllBytes(file.toPath())));
-        CompoundTag schem = root.contains("Schematic") ? root.getCompound("Schematic") : root;
+        RawNbt.Map root = RawNbt.read(Files.readAllBytes(file.toPath()));
+        RawNbt.Map schem = root.has("Schematic") ? root.getCompound("Schematic") : root;
         int w = schem.getShort("Width") & 0xFFFF;
         int h = schem.getShort("Height") & 0xFFFF;
         int l = schem.getShort("Length") & 0xFFFF;
         byte[] blocks = schem.getByteArray("Blocks");
-        byte[] add = schem.containsByteArray("AddBlocks") ? schem.getByteArray("AddBlocks") : null;
+        byte[] add = schem.has("AddBlocks") ? schem.getByteArray("AddBlocks") : null;
 
         Clipboard clip = new Clipboard(w, h, l);
         for (int y = 0; y < h; y++)

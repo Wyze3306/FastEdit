@@ -3,21 +3,28 @@ package fr.fastedit.edit;
 import cn.nukkit.Server;
 import cn.nukkit.block.BlockState;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.generator.object.BlockManager;
+import cn.nukkit.level.format.IChunk;
+import cn.nukkit.math.BlockVector3;
+import cn.nukkit.network.protocol.UpdateBlockPacket;
+import cn.nukkit.network.protocol.UpdateSubChunkBlocksPacket;
+import cn.nukkit.network.protocol.types.BlockChangeEntry;
 import cn.nukkit.plugin.Plugin;
 import fr.fastedit.math.Vec3;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class EditEngine {
 
-    public static final int BLOCKS_PER_TICK = 60_000;
+    public static final int BLOCKS_PER_TICK = 20_000;
+    public static final int MAX_EDIT_SIZE = 5_000_000;
 
     private static EditEngine INSTANCE;
     public static EditEngine get() { return INSTANCE; }
@@ -44,6 +51,13 @@ public class EditEngine {
         planners.execute(() -> {
             try {
                 planner.accept(session);
+                if (session.size() > MAX_EDIT_SIZE) {
+                    Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
+                        if (onError != null) onError.accept(new IllegalStateException(
+                            "edit too large (" + session.size() + " blocks, max " + MAX_EDIT_SIZE + ")"));
+                    });
+                    return;
+                }
                 synchronized (queue) {
                     queue.addLast(new PendingJob(session, onDone, undoSink));
                 }
@@ -88,16 +102,35 @@ public class EditEngine {
             Level lvl = job.session.level();
             var filter = job.session.filter();
 
-            BlockManager manager = new BlockManager(lvl);
+            Map<SubKey, UpdateSubChunkBlocksPacket> packets = new HashMap<>();
             int written = 0;
             for (int i = from; i < to; i++) {
                 BlockChange c = list.get(i);
+                int x = c.pos.x(), y = c.pos.y(), z = c.pos.z();
                 if (filter != null && !filter.test(lvl, c.pos)) { c.target = null; continue; }
-                c.previous = lvl.getBlockStateAt(c.pos.x(), c.pos.y(), c.pos.z());
-                manager.setBlockStateAt(c.pos.x(), c.pos.y(), c.pos.z(), c.target);
+
+                IChunk chunk = lvl.getChunk(x >> 4, z >> 4, true);
+                if (chunk == null) { c.target = null; continue; }
+
+                c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
+                chunk.setBlockState(x & 15, y, z & 15, c.target, 0);
                 written++;
+
+                SubKey key = new SubKey(x >> 4, y >> 4, z >> 4);
+                UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key,
+                    k -> new UpdateSubChunkBlocksPacket(k.cx << 4, k.sy << 4, k.cz << 4));
+                pkt.standardBlocks.add(new BlockChangeEntry(
+                    new BlockVector3(x, y, z),
+                    c.target.unsignedBlockStateHash(),
+                    UpdateBlockPacket.FLAG_ALL,
+                    -1,
+                    BlockChangeEntry.MessageType.NONE));
             }
-            if (written > 0) manager.applySubChunkUpdate();
+
+            for (var entry : packets.entrySet()) {
+                SubKey k = entry.getKey();
+                lvl.addChunkPacket(k.cx, k.cz, entry.getValue());
+            }
 
             budget -= (to - from);
             job.applied += written;
@@ -117,6 +150,8 @@ public class EditEngine {
             }
         }
     }
+
+    private record SubKey(int cx, int sy, int cz) {}
 
     private static class PendingJob {
         final EditSession session;
