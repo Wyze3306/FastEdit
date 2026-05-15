@@ -40,6 +40,48 @@ final class LegacyIds {
         put(168, "prismarine");          put(169, "sea_lantern");         put(170, "hay_block");
         put(172, "hardened_clay");       put(173, "coal_block");          put(174, "packed_ice");
         put(179, "red_sandstone");       put(251, "concrete");            put(252, "concrete_powder");
+
+        // extended coverage (base ids; orientation/variant handled in LegacyFlatten)
+        put(26, "red_bed");              put(34, "piston_head");          put(36, "moving_piston");
+        put(55, "redstone_wire");        put(59, "wheat");                put(69, "lever");
+        put(70, "stone_pressure_plate"); put(72, "oak_pressure_plate");   put(75, "unlit_redstone_torch");
+        put(76, "redstone_torch");       put(77, "stone_button");         put(83, "sugar_cane");
+        put(84, "jukebox");              put(90, "nether_portal");        put(92, "cake");
+        put(93, "repeater");             put(94, "repeater");             put(96, "oak_trapdoor");
+        put(97, "infested_stone");       put(99, "brown_mushroom_block"); put(100, "red_mushroom_block");
+        put(101, "iron_bars");           put(104, "pumpkin_stem");        put(105, "melon_stem");
+        put(106, "vine");                put(107, "oak_fence_gate");      put(108, "brick_stairs");
+        put(109, "stone_brick_stairs");  put(111, "lily_pad");            put(113, "nether_brick_fence");
+        put(114, "nether_brick_stairs"); put(115, "nether_wart");         put(116, "enchanting_table");
+        put(117, "brewing_stand");       put(118, "cauldron");            put(119, "end_portal");
+        put(120, "end_portal_frame");    put(122, "dragon_egg");          put(123, "redstone_lamp");
+        put(124, "lit_redstone_lamp");   put(125, "oak_double_slab");     put(126, "oak_slab");
+        put(127, "cocoa");               put(128, "sandstone_stairs");    put(130, "ender_chest");
+        put(131, "tripwire_hook");       put(132, "tripwire");            put(134, "spruce_stairs");
+        put(135, "birch_stairs");        put(136, "jungle_stairs");       put(137, "command_block");
+        put(138, "beacon");              put(139, "cobblestone_wall");    put(140, "flower_pot");
+        put(141, "carrots");             put(142, "potatoes");            put(143, "oak_button");
+        put(145, "anvil");               put(146, "trapped_chest");       put(147, "light_weighted_pressure_plate");
+        put(148, "heavy_weighted_pressure_plate"); put(149, "comparator"); put(150, "comparator");
+        put(151, "daylight_detector");   put(152, "redstone_block");      put(153, "quartz_ore");
+        put(154, "hopper");              put(156, "quartz_stairs");       put(157, "activator_rail");
+        put(158, "dropper");             put(161, "acacia_leaves");       put(162, "acacia_log");
+        put(163, "acacia_stairs");       put(164, "dark_oak_stairs");     put(165, "slime_block");
+        put(166, "barrier");             put(167, "iron_trapdoor");       put(175, "sunflower");
+        put(176, "standing_banner");     put(177, "wall_banner");         put(178, "daylight_detector");
+        put(180, "red_sandstone_stairs");put(181, "red_sandstone_double_slab"); put(182, "red_sandstone_slab");
+        put(183, "spruce_fence_gate");   put(184, "birch_fence_gate");    put(185, "jungle_fence_gate");
+        put(186, "dark_oak_fence_gate"); put(187, "acacia_fence_gate");   put(188, "spruce_fence");
+        put(189, "birch_fence");         put(190, "jungle_fence");        put(191, "dark_oak_fence");
+        put(192, "acacia_fence");        put(193, "spruce_door");         put(194, "birch_door");
+        put(195, "jungle_door");         put(196, "acacia_door");         put(197, "dark_oak_door");
+        put(198, "end_rod");             put(199, "chorus_plant");        put(200, "chorus_flower");
+        put(201, "purpur_block");        put(202, "purpur_pillar");       put(203, "purpur_stairs");
+        put(204, "purpur_double_slab");  put(205, "purpur_slab");         put(206, "end_brick");
+        put(207, "beetroots");           put(208, "dirt_path");           put(209, "end_gateway");
+        put(210, "repeating_command_block"); put(211, "chain_command_block"); put(212, "frosted_ice");
+        put(213, "magma");               put(214, "nether_wart_block");   put(215, "red_nether_brick");
+        put(216, "bone_block");          put(218, "observer");            put(255, "structure_block");
     }
 
     private static void put(int id, String suffix) { MAP.put(id, "minecraft:" + suffix); }

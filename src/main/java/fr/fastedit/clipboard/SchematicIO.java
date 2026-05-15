@@ -239,6 +239,7 @@ public final class SchematicIO {
         int l = schem.getShort("Length") & 0xFFFF;
         byte[] blocks = schem.getByteArray("Blocks");
         byte[] add = schem.has("AddBlocks") ? schem.getByteArray("AddBlocks") : null;
+        byte[] meta = schem.has("Data") ? schem.getByteArray("Data") : null;
 
         Clipboard clip = new Clipboard(w, h, l);
         for (int y = 0; y < h; y++)
@@ -247,22 +248,21 @@ public final class SchematicIO {
                     int idx = (y * l + z) * w + x;
                     int id = blocks[idx] & 0xFF;
                     if (add != null && idx / 2 < add.length) {
-                        int half = add[idx / 2] & 0xFF;
-                        id |= ((idx % 2 == 0 ? half & 0x0F : (half >> 4) & 0x0F) << 8);
+                        int hi = add[idx / 2] & 0xFF;
+                        id |= ((idx % 2 == 0 ? hi & 0x0F : (hi >> 4) & 0x0F) << 8);
                     }
-                    String javaId = LegacyIds.lookup(id);
-                    if (javaId == null) {
+                    int data = (meta != null && idx < meta.length) ? meta[idx] & 0xFF : 0;
+
+                    BlockState st = LegacyFlatten.translate(id, data);
+                    if (st == null) {
+                        String javaId = LegacyIds.lookup(id);
+                        if (javaId != null) st = JavaStates.resolve(javaId, java.util.Map.of());
+                    }
+                    if (st == null) {
                         clip.set(x, y, z, Blocks.placeholder());
-                        clip.setOriginal(x, y, z, "legacy:" + id);
+                        clip.setOriginal(x, y, z, "legacy:" + id + (data != 0 ? ":" + data : ""));
                     } else {
-                        BlockState st = Blocks.state(BlockAliases.translate(javaId));
-                        if (st == null) st = Blocks.state(javaId);
-                        if (st == null) {
-                            clip.set(x, y, z, Blocks.placeholder());
-                            clip.setOriginal(x, y, z, javaId);
-                        } else {
-                            clip.set(x, y, z, st);
-                        }
+                        clip.set(x, y, z, st);
                     }
                 }
         return clip;

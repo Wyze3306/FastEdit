@@ -1,22 +1,27 @@
 package fr.fastedit.edit;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * History buffer with a global memory ceiling. A huge edit is applied as many
- * segments (one {@link Entry} each), so {@code //undo} reverts it segment by
- * segment. Total retained blocks are capped at {@link #MAX_TOTAL_BLOCKS}: once
- * exceeded, the oldest segments are evicted so the heap can never blow up,
- * regardless of how large the edit was.
+ * History buffer keyed by <em>transaction</em>. A paste is streamed as many
+ * internal segments but shares one transaction id, so a single {@code //undo}
+ * reverts the whole structure at once. A global block budget caps retained
+ * blocks: once exceeded the oldest transactions are evicted so the heap can
+ * never blow up regardless of edit size.
  */
 public final class UndoBuffer {
 
-    public record Entry(String levelName, List<BlockChange> changes) {}
+    public record Entry(String levelName, List<BlockChange> changes, long txn) {}
 
-    /** ~96 B per retained change → ~4M blocks ≈ ~380 MB worst case. */
-    public static final long MAX_TOTAL_BLOCKS = 4_000_000L;
+    /** ~96 B per retained change → ~16M blocks ≈ ~1.5 GB worst case ceiling. */
+    public static final long MAX_TOTAL_BLOCKS = 16_000_000L;
+
+    private static final AtomicLong TXN = new AtomicLong(1);
+    public static long nextTxn() { return TXN.getAndIncrement(); }
 
     private final Deque<Entry> undo = new ArrayDeque<>();
     private final Deque<Entry> redo = new ArrayDeque<>();
@@ -24,7 +29,6 @@ public final class UndoBuffer {
     private long redoBlocks;
 
     public UndoBuffer() {}
-    /** Legacy constructor; capacity is now a memory budget, the count is ignored. */
     public UndoBuffer(int ignoredCapacity) {}
 
     public void push(Entry e) {
@@ -32,47 +36,49 @@ public final class UndoBuffer {
         undoBlocks += e.changes().size();
         redo.clear();
         redoBlocks = 0;
-        trim(undo, this::undoBlocks, this::setUndoBlocks);
+        while (undoBlocks > MAX_TOTAL_BLOCKS && undo.size() > 1) {
+            Entry old = undo.pollLast();
+            undoBlocks -= old.changes().size();
+        }
     }
 
-    public Entry popUndo() {
-        Entry e = undo.poll();
-        if (e != null) {
+    /** Pops every entry of the newest transaction (the whole last edit). */
+    public List<Entry> popUndoGroup() {
+        if (undo.isEmpty()) return List.of();
+        long txn = undo.peek().txn();
+        List<Entry> group = new ArrayList<>();
+        while (!undo.isEmpty() && undo.peek().txn() == txn) {
+            Entry e = undo.poll();
             undoBlocks -= e.changes().size();
+            group.add(e);
             redo.push(e);
             redoBlocks += e.changes().size();
-            trim(redo, this::redoBlocks, this::setRedoBlocks);
         }
-        return e;
+        while (redoBlocks > MAX_TOTAL_BLOCKS && redo.size() > 1) {
+            Entry old = redo.pollLast();
+            redoBlocks -= old.changes().size();
+        }
+        return group;
     }
 
-    public Entry popRedo() {
-        Entry e = redo.poll();
-        if (e != null) {
+    public List<Entry> popRedoGroup() {
+        if (redo.isEmpty()) return List.of();
+        long txn = redo.peek().txn();
+        List<Entry> group = new ArrayList<>();
+        while (!redo.isEmpty() && redo.peek().txn() == txn) {
+            Entry e = redo.poll();
             redoBlocks -= e.changes().size();
+            group.add(e);
             undo.push(e);
             undoBlocks += e.changes().size();
-            trim(undo, this::undoBlocks, this::setUndoBlocks);
         }
-        return e;
+        while (undoBlocks > MAX_TOTAL_BLOCKS && undo.size() > 1) {
+            Entry old = undo.pollLast();
+            undoBlocks -= old.changes().size();
+        }
+        return group;
     }
 
     public int undoSize() { return undo.size(); }
     public int redoSize() { return redo.size(); }
-
-    private long undoBlocks() { return undoBlocks; }
-    private long redoBlocks() { return redoBlocks; }
-    private void setUndoBlocks(long v) { undoBlocks = v; }
-    private void setRedoBlocks(long v) { redoBlocks = v; }
-
-    /** Evict oldest entries until under budget, but always keep the newest one. */
-    private void trim(Deque<Entry> dq, java.util.function.LongSupplier get,
-                      java.util.function.LongConsumer set) {
-        long blocks = get.getAsLong();
-        while (blocks > MAX_TOTAL_BLOCKS && dq.size() > 1) {
-            Entry old = dq.pollLast();
-            blocks -= old.changes().size();
-        }
-        set.accept(blocks);
-    }
 }

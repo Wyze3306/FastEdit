@@ -108,6 +108,7 @@ public class EditEngine {
         planners.execute(() -> {
             final AtomicInteger outstanding = new AtomicInteger();
             final AtomicBoolean failed = new AtomicBoolean();
+            final long txn = UndoBuffer.nextTxn();
             long total = 0;
             try {
                 boolean more = true;
@@ -122,7 +123,7 @@ public class EditEngine {
                     total += s.size();
                     outstanding.incrementAndGet();
                     Consumer<Integer> segDone = n -> outstanding.decrementAndGet();
-                    synchronized (queue) { queue.addLast(new PendingJob(s, segDone, undoSink)); }
+                    synchronized (queue) { queue.addLast(new PendingJob(s, segDone, undoSink, txn)); }
                 }
                 while (outstanding.get() > 0) Thread.sleep(8);
                 final long applied = total;
@@ -210,7 +211,7 @@ public class EditEngine {
                 if (job.undoSink != null && job.applied > 0) {
                     List<BlockChange> kept = new ArrayList<>(job.applied);
                     for (BlockChange c : list) if (c.target != null) kept.add(c);
-                    job.undoSink.push(new UndoBuffer.Entry(lvl.getName(), kept));
+                    job.undoSink.push(new UndoBuffer.Entry(lvl.getName(), kept, job.txn));
                 }
                 if (job.onDone != null) {
                     try { job.onDone.accept(job.applied); }
@@ -226,11 +227,16 @@ public class EditEngine {
         final EditSession session;
         final Consumer<Integer> onDone;
         final UndoBuffer undoSink;
+        final long txn;
         int cursor;
         int applied;
 
         PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink) {
-            this.session = s; this.onDone = onDone; this.undoSink = undoSink;
+            this(s, onDone, undoSink, UndoBuffer.nextTxn());
+        }
+
+        PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink, long txn) {
+            this.session = s; this.onDone = onDone; this.undoSink = undoSink; this.txn = txn;
         }
     }
 }

@@ -31,6 +31,18 @@ public final class JavaStates {
 
     private JavaStates() {}
 
+    /**
+     * Resolves a modern Java id (+ optional state map) to a Bedrock state:
+     * applies the {@link fr.fastedit.block.BlockAliases} id mapping then this
+     * translator, falling back to the un-aliased id. {@code null} if unknown.
+     */
+    public static BlockState resolve(String javaId, Map<String, String> jp) {
+        String mapped = fr.fastedit.block.BlockAliases.translate(javaId);
+        BlockState st = apply(mapped, jp);
+        if (st == null && !mapped.equals(javaId)) st = apply(javaId, jp);
+        return st;
+    }
+
     /** @return a Bedrock {@link BlockState}, or {@code null} if the id is unknown. */
     public static BlockState apply(String bedrockId, Map<String, String> jp) {
         BlockProperties props;
