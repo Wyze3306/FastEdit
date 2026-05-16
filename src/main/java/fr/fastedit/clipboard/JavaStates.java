@@ -24,7 +24,7 @@ public final class JavaStates {
     private JavaStates() {}
 
     public static BlockState resolve(String javaId, Map<String, String> jp) {
-        for (String cand : candidates(javaId)) {
+        for (String cand : candidates(javaId, jp)) {
             // Only attempt ids the live registry actually has, so a wrong
             // guess is skipped instead of mis-placing a block.
             if (BedrockIds.ready() && !BedrockIds.has(cand)) continue;
@@ -35,9 +35,20 @@ public final class JavaStates {
     }
 
     /** Ordered Bedrock-id candidates for a Java id (most specific first). */
-    private static List<String> candidates(String javaId) {
+    private static List<String> candidates(String javaId, Map<String, String> jp) {
         String id = javaId.startsWith("minecraft:") ? javaId.substring(10) : javaId;
         List<String> out = new ArrayList<>(6);
+
+        // Bedrock split the light block into light_block_0..15 — no bare id.
+        if (id.equals("light")) {
+            int lvl = 15;
+            try { lvl = Math.max(0, Math.min(15, Integer.parseInt(jp.get("level")))); }
+            catch (Exception ignored) {}
+            out.add("minecraft:light_block_" + lvl);
+            out.add("minecraft:light_block_15");
+            return out;
+        }
+
         String aliased = fr.fastedit.block.BlockAliases.translate(javaId);
         out.add(aliased);
         if (!aliased.equals(javaId)) out.add(javaId);

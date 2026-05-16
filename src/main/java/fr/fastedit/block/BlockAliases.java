@@ -97,7 +97,14 @@ public final class BlockAliases {
         put("powered_rail",           "golden_rail");
         put("tripwire",               "trip_wire");
         put("cobblestone_stairs",     "stone_stairs");
-        put("light",                  "light_block");
+        put("light",                  "light_block_15");
+        put("bricks",                 "brick_block");
+        put("chain",                  "iron_chain");
+        put("water_cauldron",         "cauldron");
+        put("lava_cauldron",          "cauldron");
+        put("powder_snow_cauldron",   "cauldron");
+        put("potted_azalea_bush",     "flower_pot");
+        put("potted_flowering_azalea_bush", "flower_pot");
         put("small_dripleaf",         "small_dripleaf_block");
         put("big_dripleaf_stem",      "big_dripleaf");
         put("waxed_copper_block",     "waxed_copper");
