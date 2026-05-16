@@ -44,6 +44,8 @@ You can also stand somewhere and use `//pos1` / `//pos2` instead of the wand.
 | `//sel` | Show the current selection. |
 | `//sel clear` | Clear it. |
 | `//size` | Show width × height × length and the block count. |
+| `//expand <n> [dir]` | Grow the selection (see below). |
+| `//expandrod` | Get the blaze rod that grows it by clicking. |
 
 ---
 
@@ -131,6 +133,44 @@ clipboard on existing terrain without clearing the gaps.
 //stack 5 east        copy your selection 5 times to the east
 //move 10 up          push the selection 10 blocks up
 ```
+
+---
+
+## Expand the selection
+
+Grow your current selection without re-selecting it — same idea as Java
+WorldEdit's `//expand`.
+
+```
+//expand <amount> [direction]            grow one side
+//expand <amount> <reverse> [direction]  grow both opposite sides at once
+//expand <amount> n,w                    several directions in one go
+//expand vert                            stretch to the world's build limits
+```
+
+`direction` is the same set as `//move`: `up`, `down`, `north`, `south`,
+`east`, `west`, or `me` / `back` (relative to where you're looking — `me`
+is the default if you omit it, and it accounts for looking up or down).
+
+```
+//expand 10 up        raise the top of the selection by 10
+//expand 5 5 up       add 5 above and 5 below
+//expand 8 me         push it 8 blocks the way you're facing
+//expand vert         floor-to-ceiling on the same footprint
+```
+
+### Expand rod
+
+```
+//expandrod
+[click any block face]
+```
+
+`//expandrod` gives you a **blaze rod**. Left- or right-click a block and
+the selection grows **1 block toward the face you clicked** — top face
+grows it up, north face grows it north, and so on. Handy for nudging a
+selection out by hand instead of re-typing coordinates. (You need a
+selection first; set it with `//wand`, `//pos1`/`//pos2`.)
 
 ---
 
@@ -254,6 +294,8 @@ schematics that referenced Bedrock-unknown blocks.
 | `//pos1` `//pos2` | Set positions manually |
 | `//sel [clear]` | Show / clear the selection |
 | `//size` | Show selection volume |
+| `//expand <n> [rev] [dir]` `//expand vert` | Grow the selection |
+| `//expandrod` | Blaze rod: click a face to grow the selection |
 | `//set <pat>` | Fill |
 | `//replace <mask> <pat>` | Conditional fill |
 | `//walls <pat>` | Outline |

@@ -8,6 +8,8 @@ import fr.fastedit.command.BrushCommand;
 import fr.fastedit.command.CopyCommand;
 import fr.fastedit.command.CutCommand;
 import fr.fastedit.command.CylCommand;
+import fr.fastedit.command.ExpandCommand;
+import fr.fastedit.command.ExpandRodCommand;
 import fr.fastedit.command.FlipCommand;
 import fr.fastedit.command.InspectCommand;
 import fr.fastedit.command.MaskCommand;
@@ -57,6 +59,8 @@ public class FastEdit extends PluginBase {
             register(map, new Pos2Command());
             register(map, new SelCommand());
             register(map, new SizeCommand());
+            register(map, new ExpandCommand());
+            register(map, new ExpandRodCommand());
             register(map, new SetCommand());
             register(map, new ReplaceCommand());
             register(map, new WallsCommand());

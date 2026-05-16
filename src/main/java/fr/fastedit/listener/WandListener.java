@@ -10,10 +10,14 @@ import cn.nukkit.event.player.PlayerInteractEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.item.ItemID;
 import cn.nukkit.item.ItemWoodenAxe;
+import cn.nukkit.math.BlockFace;
 import fr.fastedit.brush.Brush;
 import fr.fastedit.brush.Brushes;
 import fr.fastedit.clipboard.UnknownBlocks;
+import fr.fastedit.command.ExpandCommand;
+import fr.fastedit.command.ExpandRodCommand;
 import fr.fastedit.command.InspectCommand;
+import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;
 import fr.fastedit.session.SessionManager;
@@ -33,6 +37,7 @@ public class WandListener implements Listener {
     public void onBreak(BlockBreakEvent event) {
         if (event.getItem() instanceof ItemWoodenAxe) event.setCancelled(true);
         if (InspectCommand.isInspector(event.getItem())) event.setCancelled(true);
+        if (ExpandRodCommand.isRod(event.getItem())) event.setCancelled(true);
     }
 
     @EventHandler
@@ -44,6 +49,11 @@ public class WandListener implements Listener {
 
         if (InspectCommand.isInspector(item)) {
             handleInspector(p, event);
+            return;
+        }
+
+        if (ExpandRodCommand.isRod(item)) {
+            handleExpandRod(p, session, event);
             return;
         }
 
@@ -93,6 +103,33 @@ public class WandListener implements Listener {
         } catch (IllegalArgumentException e) {
             p.sendMessage("§c[FastEdit] " + e.getMessage());
         }
+    }
+
+    private void handleExpandRod(Player p, Session session, PlayerInteractEvent event) {
+        var action = event.getAction();
+        if (action != PlayerInteractEvent.Action.LEFT_CLICK_BLOCK
+            && action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) return;
+        event.setCancelled(true);
+
+        if (!session.hasSelection()) {
+            p.sendMessage("§c[FastEdit] no selection — set pos1/pos2 with the wand first.");
+            return;
+        }
+
+        BlockFace face = event.getFace();
+        Vec3 dir = face != null
+            ? new Vec3(face.getXOffset(), face.getYOffset(), face.getZOffset())
+            : ExpandCommand.lookStep(p);
+        if (dir.x() == 0 && dir.y() == 0 && dir.z() == 0) {
+            p.sendMessage("§c[FastEdit] can't tell which way to expand.");
+            return;
+        }
+
+        Region nr = ExpandCommand.expand(session.region(), dir, 1);
+        session.setPos1(p.getLevel(), nr.min());
+        session.setPos2(p.getLevel(), nr.max());
+        p.sendMessage("§dFastEdit §7| expand §a+1 §7" + ExpandCommand.dirName(dir)
+            + " §7| §f" + nr.min() + " §7-> §f" + nr.max());
     }
 
     private void handleInspector(Player p, PlayerInteractEvent event) {
