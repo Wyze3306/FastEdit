@@ -14,6 +14,7 @@ import fr.fastedit.command.FlipCommand;
 import fr.fastedit.command.InspectCommand;
 import fr.fastedit.command.MaskCommand;
 import fr.fastedit.command.MoveCommand;
+import fr.fastedit.command.OutlineCommand;
 import fr.fastedit.command.PasteCommand;
 import fr.fastedit.command.Pos1Command;
 import fr.fastedit.command.Pos2Command;
@@ -34,6 +35,7 @@ import fr.fastedit.clipboard.UnknownBlocks;
 import fr.fastedit.edit.EditEngine;
 import fr.fastedit.listener.CommandAliasListener;
 import fr.fastedit.listener.WandListener;
+import fr.fastedit.session.SelectionOutline;
 
 public class FastEdit extends PluginBase {
 
@@ -47,6 +49,7 @@ public class FastEdit extends PluginBase {
     public void onEnable() {
         try {
             EditEngine.boot(this);
+            SelectionOutline.boot(this);
             UnknownBlocks.load();
 
             PluginManager pm = getServer().getPluginManager();
@@ -58,6 +61,7 @@ public class FastEdit extends PluginBase {
             register(map, new Pos1Command());
             register(map, new Pos2Command());
             register(map, new SelCommand());
+            register(map, new OutlineCommand());
             register(map, new SizeCommand());
             register(map, new ExpandCommand());
             register(map, new ExpandRodCommand());

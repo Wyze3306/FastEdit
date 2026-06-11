@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "fr.fastedit"
-version = "1.0.3"
+version = "1.0.4"
 description = "FastEdit — async WorldEdit plugin for PowerNukkitX (Bedrock)"
 
 java {
