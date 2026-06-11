@@ -114,6 +114,9 @@ public class EditEngine {
             final AtomicBoolean failed = new AtomicBoolean();
             final long txn = UndoBuffer.nextTxn();
             final Set<Long> touched = ConcurrentHashMap.newKeySet();
+            // Lazily created on the main thread by the first tick; shared by
+            // every segment so the pins live until the single final finalize.
+            final ChunkPin[] pin = new ChunkPin[1];
             long total = 0;
             try {
                 boolean more = true;
@@ -129,20 +132,26 @@ public class EditEngine {
                     outstanding.incrementAndGet();
                     Consumer<Integer> segDone = n -> outstanding.decrementAndGet();
                     synchronized (queue) {
-                        queue.addLast(new PendingJob(s, segDone, undoSink, txn, touched, false));
+                        queue.addLast(new PendingJob(s, segDone, undoSink, txn, touched, false, pin));
                     }
                 }
                 while (outstanding.get() > 0) Thread.sleep(8);
                 final long applied = total;
                 Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
-                    finalizeChunks(level, touched);          // persist+relight+resend once
+                    finalizeChunks(level, touched, pin[0]);  // persist+relight+resend once
                     if (onDone != null) onDone.accept(applied);
                 });
             } catch (Throwable t) {
                 failed.set(true);
                 plugin.getLogger().error("[FastEdit] streaming edit failed", t);
-                Server.getInstance().getScheduler().scheduleTask(plugin,
-                    () -> { if (onError != null) onError.accept(t); });
+                // Drain in-flight segments before unpinning, else the pins
+                // lapse while they are still writing.
+                try { while (outstanding.get() > 0) Thread.sleep(8); }
+                catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+                Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
+                    finalizeChunks(level, touched, pin[0]);  // still unpin what we touched
+                    if (onError != null) onError.accept(t);
+                });
             }
         });
     }
@@ -179,8 +188,16 @@ public class EditEngine {
             PendingJob bad;
             synchronized (queue) { bad = queue.pollFirst(); }
             plugin.getLogger().error("[FastEdit] tick crashed — dropped 1 job", t);
-            if (bad != null && bad.onDone != null) {
-                try { bad.onDone.accept(bad.applied); } catch (Throwable ignored) {}
+            if (bad != null) {
+                // Streamed segments share their pin; the stream's own finalize
+                // still runs (segDone below) and unpins. Solo jobs unpin here.
+                if (bad.ownsFinalize) {
+                    try { finalizeChunks(bad.session.level(), bad.touched, bad.pin[0]); }
+                    catch (Throwable ignored) {}
+                }
+                if (bad.onDone != null) {
+                    try { bad.onDone.accept(bad.applied); } catch (Throwable ignored) {}
+                }
             }
         }
     }
@@ -221,8 +238,15 @@ public class EditEngine {
                     // dropped (whole bands of a big schematic vanished).
                     if (cx != lastCx || cz != lastCz) {
                         chunk.setChanged();
-                        job.touched.add(chunkKey(cx, cz));
-                        try { lvl.cancelUnloadChunkRequest(cx, cz); } catch (Throwable ignored) {}
+                        // Pin every touched chunk for the whole edit: PNX's GC
+                        // serializes evicted chunks ASYNC then setChanged(false),
+                        // racing our writes — a chunk evicted mid-paste and
+                        // reloaded from disk came back with holes. Pinned
+                        // chunks are "in use" and never enter that path.
+                        if (job.touched.add(chunkKey(cx, cz))) {
+                            if (job.pin[0] == null) job.pin[0] = new ChunkPin(lvl);
+                            try { lvl.registerChunkLoader(job.pin[0], cx, cz, false); } catch (Throwable ignored) {}
+                        }
                         lastCx = cx; lastCz = cz;
                     }
 
@@ -245,6 +269,8 @@ public class EditEngine {
                         BlockChangeEntry.MessageType.NONE));
                 } catch (Throwable perBlock) {
                     c.target = null; // drop this block, keep the edit going
+                    job.dropped++;
+                    if (job.firstDropCause == null) job.firstDropCause = perBlock;
                 }
             }
 
@@ -259,12 +285,18 @@ public class EditEngine {
 
             if (job.cursor >= list.size()) {
                 synchronized (queue) { queue.pollFirst(); }
+                if (job.dropped > 0) {
+                    // Per-block failures are recoverable but must not be
+                    // invisible: silent drops looked like random paste holes.
+                    plugin.getLogger().warning("[FastEdit] dropped " + job.dropped
+                        + " block(s) in this job — first cause: " + job.firstDropCause);
+                }
                 if (job.undoSink != null && job.applied > 0) {
                     List<BlockChange> kept = new ArrayList<>(job.applied);
                     for (BlockChange c : list) if (c.target != null) kept.add(c);
                     job.undoSink.push(new UndoBuffer.Entry(lvl.getName(), kept, job.txn));
                 }
-                if (job.ownsFinalize) finalizeChunks(lvl, job.touched);
+                if (job.ownsFinalize) finalizeChunks(lvl, job.touched, job.pin[0]);
                 if (job.onDone != null) {
                     try { job.onDone.accept(job.applied); }
                     catch (Throwable t) { plugin.getLogger().error("[FastEdit] onDone threw: " + t.getMessage()); }
@@ -284,17 +316,22 @@ public class EditEngine {
         final Set<Long> touched;
         /** Whether THIS job finalises the chunks (false for streamed segments). */
         final boolean ownsFinalize;
+        /** One-slot holder for the pin, lazily filled on the main thread. */
+        final ChunkPin[] pin;
         int cursor;
         int applied;
+        int dropped;
+        Throwable firstDropCause;
 
         PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink) {
-            this(s, onDone, undoSink, UndoBuffer.nextTxn(), new HashSet<>(), true);
+            this(s, onDone, undoSink, UndoBuffer.nextTxn(), new HashSet<>(), true, new ChunkPin[1]);
         }
 
         PendingJob(EditSession s, Consumer<Integer> onDone, UndoBuffer undoSink,
-                   long txn, Set<Long> touched, boolean ownsFinalize) {
+                   long txn, Set<Long> touched, boolean ownsFinalize, ChunkPin[] pin) {
             this.session = s; this.onDone = onDone; this.undoSink = undoSink;
             this.txn = txn; this.touched = touched; this.ownsFinalize = ownsFinalize;
+            this.pin = pin;
         }
     }
 
@@ -302,22 +339,27 @@ public class EditEngine {
         return ((long) cx << 32) | (cz & 0xFFFFFFFFL);
     }
 
-    /** Persist + relight + fully resend every touched chunk (main thread). */
-    private void finalizeChunks(Level lvl, Set<Long> touched) {
+    /** Persist + relight + fully resend, then unpin, every touched chunk (main thread). */
+    private void finalizeChunks(Level lvl, Set<Long> touched, ChunkPin pin) {
         for (long key : touched) {
             int cx = (int) (key >> 32);
             int cz = (int) key;
             // true: reload a chunk GC-evicted before finalize so it is still
             // relit and resent (skipping null left bands stale client-side).
             IChunk c = lvl.getChunk(cx, cz, true);
-            if (c == null) continue;
-            try {
-                c.setChanged();
-                c.recalculateHeightMap();
-                lvl.cancelUnloadChunkRequest(cx, cz);
-            } catch (Throwable ignored) {}
-            for (Player p : lvl.getChunkPlayers(cx, cz).values()) {
-                try { lvl.requestChunk(cx, cz, p); } catch (Throwable ignored) {}
+            if (c != null) {
+                try {
+                    c.setChanged();
+                    c.recalculateHeightMap();
+                } catch (Throwable ignored) {}
+                for (Player p : lvl.getChunkPlayers(cx, cz).values()) {
+                    try { lvl.requestChunk(cx, cz, p); } catch (Throwable ignored) {}
+                }
+            }
+            // Unpin last: setChanged() above guarantees the eventual unload
+            // takes the synchronous-save path with the complete chunk.
+            if (pin != null) {
+                try { lvl.unregisterChunkLoader(pin, cx, cz); } catch (Throwable ignored) {}
             }
         }
     }
