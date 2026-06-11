@@ -26,6 +26,17 @@ public class WandListener implements Listener {
 
     private static final int BRUSH_REACH = 256;
     private static final long BRUSH_COOLDOWN_MS = 500;
+    private static final long TOOL_COOLDOWN_MS = 300;
+
+    // Bedrock re-fires the same interact many times per click; swallow repeats
+    // of the same action within the window (a different action passes at once).
+    private boolean spam(Session s, PlayerInteractEvent.Action action) {
+        long now = System.currentTimeMillis();
+        String a = action.name();
+        if (a.equals(s.lastToolAction()) && now - s.lastToolUseMs() < TOOL_COOLDOWN_MS) return true;
+        s.setLastTool(now, a);
+        return false;
+    }
 
     public static Item makeWand() {
         Item axe = Item.get(ItemID.WOODEN_AXE);
@@ -48,7 +59,7 @@ public class WandListener implements Listener {
         Session session = SessionManager.get().of(p);
 
         if (InspectCommand.isInspector(item)) {
-            handleInspector(p, event);
+            handleInspector(p, session, event);
             return;
         }
 
@@ -58,23 +69,22 @@ public class WandListener implements Listener {
         }
 
         if (item instanceof ItemWoodenAxe) {
+            var act = event.getAction();
+            if (act != PlayerInteractEvent.Action.LEFT_CLICK_BLOCK
+                && act != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) return;
+            event.setCancelled(true);
+            if (spam(session, act)) return;
             Block b = event.getBlock();
             if (b == null) return;
             Vec3 v = new Vec3(b.getFloorX(), b.getFloorY(), b.getFloorZ());
-            switch (event.getAction()) {
-                case LEFT_CLICK_BLOCK -> {
-                    event.setCancelled(true);
-                    if (v.equals(session.pos1())) return;
-                    session.setPos1(p.getLevel(), v);
-                    p.sendMessage("§dFastEdit §7| §fpos1 §7-> §a" + v);
-                }
-                case RIGHT_CLICK_BLOCK -> {
-                    event.setCancelled(true);
-                    if (v.equals(session.pos2())) return;
-                    session.setPos2(p.getLevel(), v);
-                    p.sendMessage("§dFastEdit §7| §fpos2 §7-> §a" + v);
-                }
-                default -> {}
+            if (act == PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+                if (v.equals(session.pos1())) return;
+                session.setPos1(p.getLevel(), v);
+                p.sendMessage("§dFastEdit §7| §fpos1 §7-> §a" + v);
+            } else {
+                if (v.equals(session.pos2())) return;
+                session.setPos2(p.getLevel(), v);
+                p.sendMessage("§dFastEdit §7| §fpos2 §7-> §a" + v);
             }
             return;
         }
@@ -110,11 +120,7 @@ public class WandListener implements Listener {
         if (action != PlayerInteractEvent.Action.LEFT_CLICK_BLOCK
             && action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK) return;
         event.setCancelled(true);
-
-        if (!session.hasSelection()) {
-            p.sendMessage("§c[FastEdit] no selection — set pos1/pos2 with the wand first.");
-            return;
-        }
+        if (spam(session, action)) return;
 
         BlockFace face = event.getFace();
         Vec3 dir = face != null
@@ -125,19 +131,32 @@ public class WandListener implements Listener {
             return;
         }
 
-        Region nr = ExpandCommand.expand(session.region(), dir, 1);
+        // No selection needed: the clicked block seeds a 1-block region, then
+        // it grows 1 toward the clicked face — same as with an existing one.
+        Region base;
+        if (session.hasSelection()) {
+            base = session.region();
+        } else {
+            Block b = event.getBlock();
+            if (b == null) { p.sendMessage("§c[FastEdit] no block in sight."); return; }
+            Vec3 c = new Vec3(b.getFloorX(), b.getFloorY(), b.getFloorZ());
+            base = new Region(c, c);
+        }
+
+        Region nr = ExpandCommand.expand(base, dir, 1);
         session.setPos1(p.getLevel(), nr.min());
         session.setPos2(p.getLevel(), nr.max());
         p.sendMessage("§dFastEdit §7| expand §a+1 §7" + ExpandCommand.dirName(dir)
             + " §7| §f" + nr.min() + " §7-> §f" + nr.max());
     }
 
-    private void handleInspector(Player p, PlayerInteractEvent event) {
+    private void handleInspector(Player p, Session session, PlayerInteractEvent event) {
         var action = event.getAction();
         if (action != PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK
             && action != PlayerInteractEvent.Action.RIGHT_CLICK_AIR
             && action != PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) return;
         event.setCancelled(true);
+        if (spam(session, action)) return;
 
         Block target = event.getBlock();
         if (target == null || action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR) {
