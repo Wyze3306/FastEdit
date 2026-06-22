@@ -111,6 +111,8 @@ public final class JavaStates {
                 if (c != null) add(byName, vals, "minecraft:cardinal_direction", c);
             } else if (byName.containsKey("facing_direction")) {
                 add(byName, vals, "facing_direction", facing6(facing));
+            } else if (byName.containsKey("direction")) {
+                add(byName, vals, "direction", direction(facing, bedrockId));
             }
         }
 
@@ -177,6 +179,30 @@ public final class JavaStates {
             case "south" -> 3;
             case "west"  -> 4;
             default      -> 5;
+        };
+    }
+
+    /**
+     * Bedrock 4-way {@code direction} int. Two blocks-families share the name
+     * with different conventions: trapdoors follow EWSN_DIRECTION (E0 W1 S2 N3),
+     * everything else carrying it (beds, bells, cocoa, grindstones, looms,
+     * bookshelves, beehives, decorated pots, tripwire hooks) follows
+     * BlockFace.getHorizontalIndex (S0 W1 N2 E3). No rotation either way.
+     */
+    private static int direction(String facing, String bedrockId) {
+        if (bedrockId.endsWith("_trapdoor") || bedrockId.equals("minecraft:trapdoor")) {
+            return switch (facing) {       // EWSN_DIRECTION
+                case "west"  -> 1;
+                case "south" -> 2;
+                case "north" -> 3;
+                default      -> 0;         // east
+            };
+        }
+        return switch (facing) {           // horizontal index
+            case "west"  -> 1;
+            case "north" -> 2;
+            case "east"  -> 3;
+            default      -> 0;             // south
         };
     }
 
