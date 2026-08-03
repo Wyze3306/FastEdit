@@ -1,6 +1,6 @@
 package fr.fastedit.edit;
 
-import cn.nukkit.block.BlockState;
+import org.powernukkitx.block.BlockState;
 import fr.fastedit.math.Vec3;
 
 public final class BlockChange {

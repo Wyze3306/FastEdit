@@ -1,8 +1,7 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.nbt.NBTIO;
-import cn.nukkit.nbt.tag.CompoundTag;
-import cn.nukkit.nbt.tag.ListTag;
+import org.powernukkitx.nbt.tag.CompoundTag;
+import org.powernukkitx.nbt.tag.ListTag;
 import fr.fastedit.FastEdit;
 
 import java.io.File;
@@ -23,7 +22,7 @@ public final class UnknownBlocks {
         File f = file();
         if (!f.exists()) return;
         try {
-            CompoundTag root = NBTIO.read(f);
+            CompoundTag root = NbtFiles.read(f);
             ListTag<CompoundTag> entries = root.getList("entries", CompoundTag.class);
             for (int i = 0; i < entries.size(); i++) {
                 CompoundTag e = entries.get(i);
@@ -51,7 +50,7 @@ public final class UnknownBlocks {
         try {
             File f = file();
             f.getParentFile().mkdirs();
-            NBTIO.write(new CompoundTag().putList("entries", entries), f);
+            NbtFiles.write(new CompoundTag().putList("entries", entries), f);
         } catch (Exception e) {
             FastEdit.get().getLogger().warning("[FastEdit] failed to save unknowns: " + e.getMessage());
         }

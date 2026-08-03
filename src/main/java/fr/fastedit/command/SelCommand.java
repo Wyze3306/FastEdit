@@ -1,6 +1,6 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
+import org.powernukkitx.Player;
 import fr.fastedit.math.Region;
 import fr.fastedit.session.Session;
 

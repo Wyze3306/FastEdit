@@ -1,16 +1,16 @@
 package fr.fastedit.listener;
 
-import cn.nukkit.Player;
-import cn.nukkit.block.Block;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.Listener;
-import cn.nukkit.event.block.BlockBreakEvent;
-import cn.nukkit.event.player.PlayerInteractEvent;
-import cn.nukkit.item.Item;
-import cn.nukkit.item.ItemID;
-import cn.nukkit.item.ItemWoodenAxe;
-import cn.nukkit.math.BlockFace;
+import org.powernukkitx.Player;
+import org.powernukkitx.block.Block;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.Listener;
+import org.powernukkitx.event.block.BlockBreakEvent;
+import org.powernukkitx.event.player.PlayerInteractEvent;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.item.ItemID;
+import org.powernukkitx.item.ItemWoodenAxe;
+import org.powernukkitx.math.BlockFace;
 import fr.fastedit.brush.Brush;
 import fr.fastedit.brush.Brushes;
 import fr.fastedit.clipboard.UnknownBlocks;

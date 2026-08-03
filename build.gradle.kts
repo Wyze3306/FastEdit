@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "fr.fastedit"
-version = "1.0.5"
+version = "1.1.0"
 description = "FastEdit — async WorldEdit plugin for PowerNukkitX (Bedrock)"
 
 java {
@@ -21,7 +21,13 @@ repositories {
 }
 
 dependencies {
-    val localPnx = System.getenv("FASTEDIT_PNX_JAR") ?: System.getenv("LINESIA_PNX_JAR")
+    // PNX 3 is not published to any reachable Maven repo, so the compile
+    // classpath comes from a local build: FASTEDIT_PNX_JAR, else the sibling
+    // PowerNukkitX checkout's build/libs (plain jar + its dependency jars).
+    val localPnx = System.getenv("FASTEDIT_PNX_JAR")
+        ?: System.getenv("LINESIA_PNX_JAR")
+        ?: rootProject.file("../PowerNukkitX/build/libs")
+            .takeIf { it.isDirectory }?.absolutePath
     if (localPnx != null && file(localPnx).exists()) {
         val f = file(localPnx)
         if (f.isDirectory) {
@@ -34,7 +40,7 @@ dependencies {
             }
         }
     } else {
-        compileOnly("cn.powernukkitx:powernukkitx:2.0.0-SNAPSHOT")
+        compileOnly("org.powernukkitx:powernukkitx:3.0.1")
     }
 }
 

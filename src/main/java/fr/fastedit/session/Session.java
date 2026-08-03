@@ -1,6 +1,6 @@
 package fr.fastedit.session;
 
-import cn.nukkit.level.Level;
+import org.powernukkitx.level.Level;
 import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.edit.UndoBuffer;
 import fr.fastedit.math.Region;

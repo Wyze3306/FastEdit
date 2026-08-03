@@ -1,7 +1,7 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.block.BlockState;
+import org.powernukkitx.Player;
+import org.powernukkitx.block.BlockState;
 import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.clipboard.UnknownBlocks;
 import fr.fastedit.edit.EditEngine;

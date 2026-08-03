@@ -1,7 +1,7 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.level.Level;
+import org.powernukkitx.Player;
+import org.powernukkitx.level.Level;
 import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;
 import fr.fastedit.session.Session;

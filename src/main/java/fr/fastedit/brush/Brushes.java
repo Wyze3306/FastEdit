@@ -1,7 +1,7 @@
 package fr.fastedit.brush;
 
-import cn.nukkit.item.Item;
-import cn.nukkit.nbt.tag.CompoundTag;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.block.Mask;
 import fr.fastedit.block.Pattern;
 import fr.fastedit.session.Session;
@@ -19,13 +19,13 @@ public final class Brushes {
     }
 
     public static boolean hasBrush(Item item) {
-        return isShovel(item) && item.hasCompoundTag()
-            && item.getNamedTag().contains(NBT_KEY);
+        return isShovel(item) && item.hasNbt()
+            && item.getNbt().contains(NBT_KEY);
     }
 
     public static Brush fromItem(Item item, Session session) {
         if (!hasBrush(item)) return null;
-        return fromNbt(item.getNamedTag().getCompound(NBT_KEY), session);
+        return fromNbt(item.getNbt().getCompound(NBT_KEY), session);
     }
 
     public static Brush fromNbt(CompoundTag tag, Session session) {
@@ -57,15 +57,15 @@ public final class Brushes {
     }
 
     public static void writeToItem(Item item, CompoundTag brushData) {
-        CompoundTag tag = item.hasCompoundTag() ? item.getNamedTag() : new CompoundTag();
+        CompoundTag tag = item.hasNbt() ? item.getNbt() : new CompoundTag();
         tag.putCompound(NBT_KEY, brushData);
-        item.setNamedTag(tag);
+        item.setNbt(tag);
     }
 
     public static void clearOnItem(Item item) {
-        if (!item.hasCompoundTag()) return;
-        CompoundTag tag = item.getNamedTag();
+        if (!item.hasNbt()) return;
+        CompoundTag tag = item.getNbt();
         tag.remove(NBT_KEY);
-        item.setNamedTag(tag);
+        item.setNbt(tag);
     }
 }

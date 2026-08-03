@@ -1,12 +1,12 @@
 package fr.fastedit.session;
 
-import cn.nukkit.Player;
-import cn.nukkit.Server;
-import cn.nukkit.level.Level;
-import cn.nukkit.level.ParticleEffect;
-import cn.nukkit.math.Vector3;
-import cn.nukkit.plugin.Plugin;
-import cn.nukkit.utils.MolangVariableMap;
+import org.powernukkitx.Player;
+import org.powernukkitx.Server;
+import org.powernukkitx.level.Level;
+import org.powernukkitx.level.ParticleEffect;
+import org.powernukkitx.math.Vector3;
+import org.powernukkitx.plugin.Plugin;
+import org.powernukkitx.utils.MolangVariableMap;
 import fr.fastedit.math.Vec3;
 
 /**

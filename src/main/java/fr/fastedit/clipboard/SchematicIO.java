@@ -1,11 +1,10 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.Server;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.level.structure.Structure;
-import cn.nukkit.level.structure.StructureAPI;
-import cn.nukkit.nbt.NBTIO;
-import cn.nukkit.nbt.tag.CompoundTag;
+import org.powernukkitx.Server;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.level.structure.Structure;
+import org.powernukkitx.level.structure.StructureAPI;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.FastEdit;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Vec3;
@@ -113,7 +112,7 @@ public final class SchematicIO {
     }
 
     private static Clipboard loadMcStructure(File file) throws Exception {
-        CompoundTag root = NBTIO.read(file, java.nio.ByteOrder.LITTLE_ENDIAN);
+        CompoundTag root = NbtFiles.readLE(file);
         Structure s = Structure.fromNbtAsync(root).join();
         return structureToClipboard(s);
     }

@@ -1,6 +1,6 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.block.BlockState;
+import org.powernukkitx.block.BlockState;
 
 import java.util.HashMap;
 import java.util.Map;

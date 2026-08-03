@@ -1,7 +1,7 @@
 package fr.fastedit.brush;
 
-import cn.nukkit.Player;
-import cn.nukkit.level.Level;
+import org.powernukkitx.Player;
+import org.powernukkitx.level.Level;
 import fr.fastedit.block.Mask;
 import fr.fastedit.block.Pattern;
 import fr.fastedit.edit.EditEngine;

@@ -1,7 +1,7 @@
 package fr.fastedit.block;
 
-import cn.nukkit.block.BlockState;
-import cn.nukkit.level.Level;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.level.Level;
 import fr.fastedit.math.Vec3;
 
 import java.util.HashSet;

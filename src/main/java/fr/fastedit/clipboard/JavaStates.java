@@ -1,12 +1,12 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.block.BlockProperties;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.block.property.enums.MinecraftCardinalDirection;
-import cn.nukkit.block.property.enums.MinecraftVerticalHalf;
-import cn.nukkit.block.property.type.BlockPropertyType;
-import cn.nukkit.math.BlockFace;
-import cn.nukkit.registry.Registries;
+import org.powernukkitx.block.BlockProperties;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.block.property.enums.MinecraftCardinalDirection;
+import org.powernukkitx.block.property.enums.MinecraftVerticalHalf;
+import org.powernukkitx.block.property.type.BlockPropertyType;
+import org.powernukkitx.math.BlockFace;
+import org.powernukkitx.registry.Registries;
 
 import java.util.ArrayList;
 import java.util.HashMap;

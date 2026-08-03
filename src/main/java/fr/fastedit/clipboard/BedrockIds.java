@@ -1,6 +1,6 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.registry.Registries;
+import org.powernukkitx.registry.Registries;
 
 import java.util.Set;
 import java.util.TreeSet;

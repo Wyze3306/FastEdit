@@ -1,9 +1,9 @@
 package fr.fastedit.listener;
 
-import cn.nukkit.Server;
-import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.Listener;
-import cn.nukkit.event.player.PlayerCommandPreprocessEvent;
+import org.powernukkitx.Server;
+import org.powernukkitx.event.EventHandler;
+import org.powernukkitx.event.Listener;
+import org.powernukkitx.event.player.PlayerCommandPreprocessEvent;
 
 public class CommandAliasListener implements Listener {
 

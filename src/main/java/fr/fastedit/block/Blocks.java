@@ -1,8 +1,8 @@
 package fr.fastedit.block;
 
-import cn.nukkit.block.BlockProperties;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.registry.Registries;
+import org.powernukkitx.block.BlockProperties;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.registry.Registries;
 
 public final class Blocks {
 

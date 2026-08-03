@@ -1,6 +1,6 @@
 package fr.fastedit.session;
 
-import cn.nukkit.Player;
+import org.powernukkitx.Player;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;

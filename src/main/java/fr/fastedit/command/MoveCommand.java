@@ -1,8 +1,8 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.level.Level;
+import org.powernukkitx.Player;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.level.Level;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.edit.EditEngine;
 import fr.fastedit.math.Region;

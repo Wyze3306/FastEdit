@@ -1,9 +1,9 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.item.Item;
-import cn.nukkit.item.ItemID;
-import cn.nukkit.nbt.tag.CompoundTag;
+import org.powernukkitx.Player;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.item.ItemID;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.session.Session;
 
 public class ExpandRodCommand extends FeCommand {
@@ -24,15 +24,15 @@ public class ExpandRodCommand extends FeCommand {
     public static Item makeRod() {
         Item rod = Item.get(ItemID.BLAZE_ROD);
         rod.setCustomName("§dFastEdit §7Expand Rod");
-        CompoundTag tag = rod.hasCompoundTag() ? rod.getNamedTag() : new CompoundTag();
+        CompoundTag tag = rod.hasNbt() ? rod.getNbt() : new CompoundTag();
         tag.putByte(ROD_TAG, 1);
-        rod.setNamedTag(tag);
+        rod.setNbt(tag);
         return rod;
     }
 
     public static boolean isRod(Item item) {
         if (item == null) return false;
         if (!ItemID.BLAZE_ROD.equals(item.getId())) return false;
-        return item.hasCompoundTag() && item.getNamedTag().contains(ROD_TAG);
+        return item.hasNbt() && item.getNbt().contains(ROD_TAG);
     }
 }

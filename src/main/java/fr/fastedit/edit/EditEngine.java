@@ -1,15 +1,17 @@
 package fr.fastedit.edit;
 
-import cn.nukkit.Player;
-import cn.nukkit.Server;
-import cn.nukkit.block.BlockState;
-import cn.nukkit.level.Level;
-import cn.nukkit.level.format.IChunk;
-import cn.nukkit.math.BlockVector3;
-import cn.nukkit.network.protocol.UpdateBlockPacket;
-import cn.nukkit.network.protocol.UpdateSubChunkBlocksPacket;
-import cn.nukkit.network.protocol.types.BlockChangeEntry;
-import cn.nukkit.plugin.Plugin;
+import org.cloudburstmc.protocol.bedrock.data.ActorBlockSyncMessageId;
+import org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateSubChunkBlocksPacket;
+import org.powernukkitx.Player;
+import org.powernukkitx.Server;
+import org.powernukkitx.block.BlockState;
+import org.powernukkitx.level.Level;
+import org.powernukkitx.level.format.IChunk;
+import org.powernukkitx.math.BlockVector3;
+import org.powernukkitx.plugin.Plugin;
+import org.powernukkitx.utils.RuntimeBlockDefinition;
 import fr.fastedit.math.Vec3;
 
 import java.util.ArrayDeque;
@@ -30,6 +32,15 @@ import java.util.function.Consumer;
 public class EditEngine {
 
     public static final int BLOCKS_PER_TICK = 40_000;
+
+    /**
+     * NEIGHBORS|NETWORK — what the old {@code UpdateBlockPacket.FLAG_ALL} int
+     * meant. PNX 3 exposes the flags as an enum set, but the per-entry field in
+     * {@link BlockChangeEntry} is still the raw protocol bitmask.
+     */
+    private static final int UPDATE_FLAGS_ALL =
+        (1 << UpdateBlockPacket.Flag.NEIGHBORS.ordinal())
+        | (1 << UpdateBlockPacket.Flag.NETWORK.ordinal());
 
     /** Blocks materialised per streaming segment (one undo step each). */
     public static final int SEGMENT_BLOCKS = 100_000;
@@ -259,14 +270,19 @@ public class EditEngine {
                     written++;
 
                     SubKey key = new SubKey(x >> 4, y >> 4, z >> 4);
-                    UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key,
-                        k -> new UpdateSubChunkBlocksPacket(k.cx << 4, k.sy << 4, k.cz << 4));
-                    pkt.standardBlocks.add(new BlockChangeEntry(
-                        new BlockVector3(x, y, z),
-                        c.target.unsignedBlockStateHash(),
-                        UpdateBlockPacket.FLAG_ALL,
+                    UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key, k -> {
+                        UpdateSubChunkBlocksPacket p = new UpdateSubChunkBlocksPacket();
+                        p.setChunkX(k.cx << 4);
+                        p.setChunkY(k.sy << 4);
+                        p.setChunkZ(k.cz << 4);
+                        return p;
+                    });
+                    pkt.getStandardBlocks().add(new BlockChangeEntry(
+                        new BlockVector3(x, y, z).toNetwork(),
+                        new RuntimeBlockDefinition((int) c.target.unsignedBlockStateHash()),
+                        UPDATE_FLAGS_ALL,
                         -1,
-                        BlockChangeEntry.MessageType.NONE));
+                        ActorBlockSyncMessageId.NONE));
                 } catch (Throwable perBlock) {
                     c.target = null; // drop this block, keep the edit going
                     job.dropped++;

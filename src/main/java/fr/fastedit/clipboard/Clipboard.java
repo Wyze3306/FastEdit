@@ -1,6 +1,6 @@
 package fr.fastedit.clipboard;
 
-import cn.nukkit.block.BlockState;
+import org.powernukkitx.block.BlockState;
 import fr.fastedit.block.Blocks;
 import fr.fastedit.math.Region;
 import fr.fastedit.math.Vec3;

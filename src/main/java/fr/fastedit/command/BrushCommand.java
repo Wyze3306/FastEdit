@@ -1,8 +1,8 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.item.Item;
-import cn.nukkit.nbt.tag.CompoundTag;
+import org.powernukkitx.Player;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.block.Pattern;
 import fr.fastedit.brush.Brushes;
 import fr.fastedit.session.Session;

@@ -1,6 +1,6 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
+import org.powernukkitx.Player;
 import fr.fastedit.block.Pattern;
 import fr.fastedit.edit.EditEngine;
 import fr.fastedit.math.Vec3;

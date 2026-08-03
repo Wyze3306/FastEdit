@@ -1,9 +1,9 @@
 package fr.fastedit.edit;
 
-import cn.nukkit.level.ChunkLoader;
-import cn.nukkit.level.Level;
-import cn.nukkit.level.Position;
-import cn.nukkit.level.format.IChunk;
+import org.powernukkitx.level.ChunkLoader;
+import org.powernukkitx.level.Level;
+import org.powernukkitx.level.Position;
+import org.powernukkitx.level.format.IChunk;
 
 /**
  * No-op ChunkLoader registered on every chunk an edit touches, for the

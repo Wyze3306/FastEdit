@@ -1,9 +1,9 @@
 package fr.fastedit;
 
-import cn.nukkit.command.Command;
-import cn.nukkit.command.CommandMap;
-import cn.nukkit.plugin.PluginBase;
-import cn.nukkit.plugin.PluginManager;
+import org.powernukkitx.command.Command;
+import org.powernukkitx.command.CommandMap;
+import org.powernukkitx.plugin.PluginBase;
+import org.powernukkitx.plugin.PluginManager;
 import fr.fastedit.command.BrushCommand;
 import fr.fastedit.command.CopyCommand;
 import fr.fastedit.command.CutCommand;
@@ -92,7 +92,7 @@ public class FastEdit extends PluginBase {
         }
     }
 
-    private void safeRegister(PluginManager pm, cn.nukkit.event.Listener listener) {
+    private void safeRegister(PluginManager pm, org.powernukkitx.event.Listener listener) {
         try { pm.registerEvents(listener, this); }
         catch (Throwable t) {
             getLogger().error("[FastEdit] listener " + listener.getClass().getSimpleName() + " failed: " + t.getMessage());

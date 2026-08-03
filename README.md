@@ -7,7 +7,10 @@ Wand, brushes, schematics, undo/redo — without the lag.
 
 ## Install
 
-1. Drop `FastEdit-1.0.0.jar` into your server's `plugins/` folder.
+Requires **PowerNukkitX 3.0.x** (plugin API `3.0.0`). For PNX 2.x servers, stay
+on FastEdit 1.0.5.
+
+1. Drop `FastEdit-1.1.0.jar` into your server's `plugins/` folder.
 2. Restart the server.
 3. In-game: `//wand` to get the wooden axe.
 
@@ -335,16 +338,23 @@ The full architecture lives in
 
 ## Building from source
 
+The compile classpath is a local PowerNukkitX 3 build — the plain jar *and*
+its dependency jars, which is exactly what `./gradlew shadowJar` leaves in
+PNX's own `build/libs/`:
+
 ```bash
+git clone https://github.com/PowerNukkitX/PowerNukkitX.git ../PowerNukkitX
+(cd ../PowerNukkitX && ./gradlew shadowJar -PbuildVersion=3.0.1)
+
 ./gradlew shadowJar
-# produces build/libs/FastEdit-1.0.0.jar
+# produces build/libs/FastEdit-1.1.0.jar
 ```
 
-If your machine can't reach the PowerNukkitX maven repo, point at a local
-jar instead:
+A sibling `../PowerNukkitX/build/libs` is picked up automatically; point
+somewhere else with:
 
 ```bash
-FASTEDIT_PNX_JAR=/path/to/powernukkitx.jar ./gradlew shadowJar
+FASTEDIT_PNX_JAR=/path/to/pnx/build/libs ./gradlew shadowJar
 ```
 
 ---

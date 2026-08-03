@@ -1,6 +1,6 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
+import org.powernukkitx.Player;
 import fr.fastedit.FastEdit;
 import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.clipboard.SchematicIO;

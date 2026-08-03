@@ -1,8 +1,8 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.Server;
-import cn.nukkit.level.Level;
+import org.powernukkitx.Player;
+import org.powernukkitx.Server;
+import org.powernukkitx.level.Level;
 import fr.fastedit.edit.EditEngine;
 import fr.fastedit.edit.UndoBuffer;
 import fr.fastedit.session.Session;

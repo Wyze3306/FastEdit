@@ -1,9 +1,9 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.item.Item;
-import cn.nukkit.item.ItemID;
-import cn.nukkit.nbt.tag.CompoundTag;
+import org.powernukkitx.Player;
+import org.powernukkitx.item.Item;
+import org.powernukkitx.item.ItemID;
+import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.session.Session;
 
 public class InspectCommand extends FeCommand {
@@ -24,15 +24,15 @@ public class InspectCommand extends FeCommand {
     public static Item makeInspector() {
         Item stick = Item.get(ItemID.STICK);
         stick.setCustomName("§dFastEdit §7Inspector");
-        CompoundTag tag = stick.hasCompoundTag() ? stick.getNamedTag() : new CompoundTag();
+        CompoundTag tag = stick.hasNbt() ? stick.getNbt() : new CompoundTag();
         tag.putByte(INSPECTOR_TAG, 1);
-        stick.setNamedTag(tag);
+        stick.setNbt(tag);
         return stick;
     }
 
     public static boolean isInspector(Item item) {
         if (item == null) return false;
         if (!ItemID.STICK.equals(item.getId())) return false;
-        return item.hasCompoundTag() && item.getNamedTag().contains(INSPECTOR_TAG);
+        return item.hasNbt() && item.getNbt().contains(INSPECTOR_TAG);
     }
 }

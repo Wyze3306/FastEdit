@@ -1,10 +1,10 @@
 package fr.fastedit.command;
 
-import cn.nukkit.Player;
-import cn.nukkit.command.CommandSender;
-import cn.nukkit.command.PluginCommand;
-import cn.nukkit.command.data.CommandParamType;
-import cn.nukkit.command.data.CommandParameter;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParamType;
+import org.powernukkitx.Player;
+import org.powernukkitx.command.CommandSender;
+import org.powernukkitx.command.PluginCommand;
+import org.powernukkitx.command.data.CommandParameter;
 import fr.fastedit.FastEdit;
 import fr.fastedit.session.Session;
 import fr.fastedit.session.SessionManager;
@@ -52,7 +52,8 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
     }
 
     protected static CommandParameter txt(String name, boolean optional) {
-        return CommandParameter.newType(name, optional, CommandParamType.STRING);
+        // ID is the protocol's plain-string parameter (PNX 3 dropped STRING).
+        return CommandParameter.newType(name, optional, CommandParamType.ID);
     }
     protected static CommandParameter num(String name, boolean optional) {
         return CommandParameter.newType(name, optional, CommandParamType.INT);
