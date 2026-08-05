@@ -11,6 +11,7 @@ import org.powernukkitx.item.Item;
 import org.powernukkitx.item.ItemID;
 import org.powernukkitx.item.ItemWoodenAxe;
 import org.powernukkitx.math.BlockFace;
+import fr.fastedit.FastEdit;
 import fr.fastedit.brush.Brush;
 import fr.fastedit.brush.Brushes;
 import fr.fastedit.clipboard.UnknownBlocks;
@@ -27,6 +28,10 @@ public class WandListener implements Listener {
     private static final int BRUSH_REACH = 256;
     private static final long BRUSH_COOLDOWN_MS = 500;
     private static final long TOOL_COOLDOWN_MS = 300;
+
+    private static boolean allowed(Player p) {
+        return p != null && p.hasPermission(FastEdit.PERMISSION);
+    }
 
     // Bedrock re-fires the same interact many times per click; swallow repeats
     // of the same action within the window (a different action passes at once).
@@ -46,6 +51,8 @@ public class WandListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
+        // Non-ops keep vanilla behaviour: a wooden axe is just a wooden axe.
+        if (!allowed(event.getPlayer())) return;
         if (event.getItem() instanceof ItemWoodenAxe) event.setCancelled(true);
         if (InspectCommand.isInspector(event.getItem())) event.setCancelled(true);
         if (ExpandRodCommand.isRod(event.getItem())) event.setCancelled(true);
@@ -54,6 +61,9 @@ public class WandListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         Player p = event.getPlayer();
+        // The tools carry the same power as the commands, so they take the
+        // same operator gate — otherwise a handed-out brush would bypass it.
+        if (!allowed(p)) return;
         Item item = event.getItem();
         if (item == null) return;
         Session session = SessionManager.get().of(p);

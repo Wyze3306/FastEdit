@@ -39,6 +39,9 @@ import fr.fastedit.session.SelectionOutline;
 
 public class FastEdit extends PluginBase {
 
+    /** Operator-only gate for every command and every FastEdit tool. Declared in plugin.yml as default: op. */
+    public static final String PERMISSION = "fastedit.use";
+
     private static FastEdit INSTANCE;
     public static FastEdit get() { return INSTANCE; }
 

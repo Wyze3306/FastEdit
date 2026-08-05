@@ -17,6 +17,10 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
     protected FeCommand(String name, String description) {
         super(name, FastEdit.get());
         setDescription(description);
+        // Operator-only: the command map tests this before dispatching, and
+        // getDataForPlayer() hides the command from non-op clients entirely.
+        setPermission(FastEdit.PERMISSION);
+        setPermissionMessage("§c[FastEdit] réservé aux opérateurs.");
     }
 
     @Override
@@ -25,6 +29,8 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
             sender.sendMessage("§cFastEdit commands are player-only.");
             return true;
         }
+        // Second gate: console/plugin callers can reach execute() directly.
+        if (!testPermission(p)) return true;
         try {
             return run(p, SessionManager.get().of(p), args);
         } catch (IllegalArgumentException e) {
