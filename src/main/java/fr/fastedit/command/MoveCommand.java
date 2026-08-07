@@ -65,16 +65,8 @@ public class MoveCommand extends FeCommand {
             case "south", "s"          -> new Vec3(0, 0, 1);
             case "east", "e"           -> new Vec3(1, 0, 0);
             case "west", "w"           -> new Vec3(-1, 0, 0);
-            case "me", "forward", "f"  -> facing(p);
+            case "me", "forward", "f"  -> ExpandCommand.lookStep(p);
             default -> throw new IllegalArgumentException("unknown direction: " + dir);
         };
-    }
-
-    private static Vec3 facing(Player p) {
-        double yaw = Math.toRadians(p.getYaw());
-        int dx = (int) Math.round(-Math.sin(yaw));
-        int dz = (int) Math.round( Math.cos(yaw));
-        if (dx == 0 && dz == 0) return new Vec3(0, 1, 0);
-        return new Vec3(Integer.signum(dx), 0, Integer.signum(dz));
     }
 }

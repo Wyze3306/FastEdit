@@ -95,6 +95,11 @@ public class FastEdit extends PluginBase {
         }
     }
 
+    @Override
+    public void onDisable() {
+        SelectionOutline.shutdown();
+    }
+
     private void safeRegister(PluginManager pm, org.powernukkitx.event.Listener listener) {
         try { pm.registerEvents(listener, this); }
         catch (Throwable t) {

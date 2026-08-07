@@ -130,10 +130,11 @@ clipboard on existing terrain without clearing the gaps.
 ```
 
 `direction` is one of: `up`, `down`, `north`, `south`, `east`, `west`, or
-`me` (the direction you're facing — default).
+`me` (the direction you're facing — default, including up and down).
 
 ```
 //stack 5 east        copy your selection 5 times to the east
+//stack 3             stack it upward/downward when looking up/down
 //move 10 up          push the selection 10 blocks up
 ```
 
