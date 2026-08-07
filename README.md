@@ -10,7 +10,7 @@ Wand, brushes, schematics, undo/redo — without the lag.
 Requires **PowerNukkitX 3.0.x** (plugin API `3.0.0`). For PNX 2.x servers, stay
 on FastEdit 1.0.5.
 
-1. Drop `FastEdit-1.1.0.jar` into your server's `plugins/` folder.
+1. Drop `FastEdit-1.3.0.jar` into your server's `plugins/` folder.
 2. Restart the server.
 3. In-game: `//wand` to get the wooden axe.
 
@@ -89,6 +89,38 @@ What you write as `<pattern>`:
 | `minecraft:stone` | same, fully qualified |
 | `50%stone,50%dirt` | weighted random |
 | `stone,dirt,grass_block` | equal-weight random |
+| `oak_stairs[weirdo_direction=2]` | a specific block state |
+
+### Orientation is kept
+
+Stairs, slabs, logs, trapdoors, doors, walls and everything else that has a
+facing keep it when you replace them. `//replace oak_stairs stone_brick_stairs`
+swaps the material and leaves every step pointing the way it already did,
+upside-down ones included — it does **not** flatten the whole staircase into
+the default east-facing state.
+
+It works across block families too, through whatever property each one uses
+for the same idea:
+
+```
+//replace oak_stairs stone_brick_stairs   facing + upside-down carried over
+//replace cobblestone_slab oak_slab       top/bottom half carried over
+//replace oak_log birch_log               axis carried over
+//replace oak_stairs oak_slab             an upside-down stair becomes a top slab
+//replace wooden_door iron_door           facing, hinge, open, upper half
+```
+
+To *set* an orientation instead of inheriting it, spell it out — anything you
+write by hand wins over the old block:
+
+```
+//set oak_log[pillar_axis=y]                        stand every log upright
+//replace oak_stairs oak_stairs[weirdo_direction=0] point them all east
+```
+
+`/inspect` (right-click a block) now prints the block's full state — exactly
+the form a pattern takes, so you can paste it straight back. An unknown
+property name is reported with the list of the real ones.
 
 ### Masks
 
@@ -102,6 +134,7 @@ What you write as `<mask>` (e.g. for `//replace`):
 | `stone` | only this block |
 | `stone,dirt` | any of these |
 | `!stone` | anything *except* stone |
+| `oak_stairs[upside_down_bit=true]` | only blocks in that state |
 
 ---
 
@@ -257,10 +290,31 @@ Available brushes:
 //brush sphere   <pattern> <radius>
 //brush cube     <pattern> <radius>
 //brush cyl      <pattern> <radius> <height>
-//brush smooth   <fillPattern> <radius> [iterations]
+//brush smooth   <radius> [passes]
 //brush clipboard [-noair]
 //brush none                          unbind the brush from this shovel
 ```
+
+### Smooth
+
+```
+//brush smooth 6          round off the terrain in a 6-block sphere
+//brush smooth 6 3        three passes — smooths much harder
+```
+
+`//brush smooth` takes no pattern: it reuses the ground's own blocks, so grass
+stays on top of dirt on top of stone instead of the whole cut turning into one
+material. Water and lava close back over what it carves out, and it only writes
+where the terrain actually changes — brushing already-smooth ground does
+nothing at all.
+
+It works on the full shape of the land rather than one height per column, so
+caves and overhangs survive, and a flat floor or a straight wall is left
+exactly where it is. Trees and plants are ignored when reading the terrain, so
+brushing a forested hillside follows the hill and not the trunks.
+
+`passes` (default `2`, max `6`) is how hard to smooth: 1 nudges a bumpy
+surface, 4 melts a cliff into a slope. Radius is capped at 32.
 
 Add a mask so the brush only affects matching blocks:
 
@@ -348,7 +402,7 @@ git clone https://github.com/PowerNukkitX/PowerNukkitX.git ../PowerNukkitX
 (cd ../PowerNukkitX && ./gradlew shadowJar -PbuildVersion=3.0.1)
 
 ./gradlew shadowJar
-# produces build/libs/FastEdit-1.1.0.jar
+# produces build/libs/FastEdit-1.3.0.jar
 ```
 
 A sibling `../PowerNukkitX/build/libs` is picked up automatically; point
