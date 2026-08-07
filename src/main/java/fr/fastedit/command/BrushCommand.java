@@ -5,16 +5,26 @@ import org.powernukkitx.item.Item;
 import org.powernukkitx.nbt.tag.CompoundTag;
 import fr.fastedit.block.Pattern;
 import fr.fastedit.brush.Brushes;
+import fr.fastedit.brush.SmoothBrush;
 import fr.fastedit.session.Session;
 
 public class BrushCommand extends FeCommand {
     public BrushCommand() { super("brush", "Bind a brush to the held shovel.");
         params(enm("kind", false, "none","sphere","cube","cyl","smooth","clipboard"), block("pattern", true), dec("radius", true));
+        // //brush smooth takes no pattern, so its radius lands where the block
+        // enum is — without this the client rejects the number as an argument.
+        overload("smooth", enm("kind", false, "smooth"), dec("radius", true), num("passes", true));
+    }
+
+    private static boolean isNumber(String s) {
+        try { Double.parseDouble(s); return true; }
+        catch (NumberFormatException e) { return false; }
     }
 
     @Override
     protected boolean run(Player p, Session session, String[] args) {
-        require(args.length >= 1, "usage: //brush <none|sphere|cube|cyl|smooth|clipboard> [pattern] [radius]");
+        require(args.length >= 1, "usage: //brush <sphere|cube|cyl> <pattern> <radius> "
+            + "| //brush smooth <radius> [passes] | //brush clipboard [-noair] | //brush none");
         Item held = p.getInventory().getItemInMainHand();
         require(Brushes.isShovel(held), "hold a shovel to bind a brush.");
 
@@ -44,12 +54,18 @@ public class BrushCommand extends FeCommand {
                 data.putInt("height", Integer.parseInt(args[3]));
             }
             case "smooth" -> {
-                require(args.length >= 3, "usage: //brush smooth <fillPattern> <radius> [iterations]");
-                Pattern.parse(args[1]);
+                // The brush keeps the ground's own blocks now, so there is no
+                // pattern any more — one is still accepted and dropped so the
+                // old "//brush smooth stone 5" out of habit doesn't error out.
+                int at = args.length > 1 && isNumber(args[1]) ? 1 : 2;
+                require(args.length > at, "usage: //brush smooth <radius> [passes]");
+                double radius = Double.parseDouble(args[at]);
+                require(radius >= 1 && radius <= SmoothBrush.MAX_RADIUS,
+                    "smooth radius must be between 1 and " + SmoothBrush.MAX_RADIUS);
                 data.putString("kind", "smooth");
-                data.putString("pattern", args[1]);
-                data.putDouble("radius", Double.parseDouble(args[2]));
-                data.putInt("iterations", args.length > 3 ? Integer.parseInt(args[3]) : 2);
+                data.putDouble("radius", radius);
+                data.putInt("iterations", args.length > at + 1
+                    ? Integer.parseInt(args[at + 1]) : SmoothBrush.DEFAULT_PASSES);
             }
             case "clipboard", "clip" -> {
                 require(session.clipboard() != null, "your clipboard is empty");

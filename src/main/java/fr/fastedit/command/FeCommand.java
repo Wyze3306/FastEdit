@@ -57,6 +57,15 @@ public abstract class FeCommand extends PluginCommand<FastEdit> {
         setCommandParameters(m);
     }
 
+    /**
+     * A second accepted shape for the same command. Bedrock validates typed
+     * arguments against the overloads it was given, so a syntax that is not
+     * described here can be refused by the client before it ever reaches us.
+     */
+    protected final void overload(String name, CommandParameter... p) {
+        addCommandParameters(name, p);
+    }
+
     protected static CommandParameter txt(String name, boolean optional) {
         // ID is the protocol's plain-string parameter (PNX 3 dropped STRING).
         return CommandParameter.newType(name, optional, CommandParamType.ID);

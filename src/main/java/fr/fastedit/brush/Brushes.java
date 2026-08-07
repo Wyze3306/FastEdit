@@ -41,8 +41,9 @@ public final class Brushes {
                 Pattern.parse(tag.getString("pattern")),
                 tag.getDouble("radius"),
                 tag.getInt("height"));
+            // "iterations" predates the rewrite and is kept so shovels bound by
+            // an older build still work; a missing value reads as 0 → the default.
             case "smooth" -> new SmoothBrush(
-                Pattern.parse(tag.getString("pattern")),
                 tag.getDouble("radius"),
                 tag.getInt("iterations"));
             case "clipboard" -> {
