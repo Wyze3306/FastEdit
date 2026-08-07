@@ -12,6 +12,7 @@ import org.powernukkitx.item.ItemID;
 import org.powernukkitx.item.ItemWoodenAxe;
 import org.powernukkitx.math.BlockFace;
 import fr.fastedit.FastEdit;
+import fr.fastedit.block.BlockStates;
 import fr.fastedit.brush.Brush;
 import fr.fastedit.brush.Brushes;
 import fr.fastedit.clipboard.UnknownBlocks;
@@ -178,7 +179,9 @@ public class WandListener implements Listener {
         }
         int x = target.getFloorX(), y = target.getFloorY(), z = target.getFloorZ();
         BlockState st = p.getLevel().getBlockStateAt(x, y, z);
-        String id = st == null ? "minecraft:air" : st.getIdentifier();
+        // Full state, not just the id: it is exactly what //set and //replace
+        // accept, so the reported line can be pasted straight into a pattern.
+        String id = BlockStates.describe(st);
         String orig = UnknownBlocks.lookup(p.getLevel().getName(), x, y, z);
 
         StringBuilder sb = new StringBuilder("§dFastEdit §7| §f").append(x).append(", ").append(y).append(", ").append(z)

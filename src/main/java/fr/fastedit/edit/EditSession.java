@@ -31,12 +31,21 @@ public class EditSession {
         changes.add(new BlockChange(pos, target));
     }
 
+    /**
+     * Resolves the pattern against the world first, so a block that carries an
+     * orientation keeps the one it already had instead of snapping back to the
+     * type's default state.
+     */
+    public void plan(Vec3 pos, Pattern pattern) {
+        plan(pos, pattern.next(level, pos));
+    }
+
     public void plan(Vec3 pos, BlockState target, BlockState layer1) {
         if (target == null) return;
         changes.add(new BlockChange(pos, target, layer1));
     }
 
     public void planAll(Iterable<Vec3> positions, Pattern pattern) {
-        for (Vec3 v : positions) plan(v, pattern.next(v));
+        for (Vec3 v : positions) plan(v, pattern);
     }
 }

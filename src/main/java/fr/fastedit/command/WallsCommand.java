@@ -18,7 +18,7 @@ public class WallsCommand extends FeCommand {
         Pattern pattern = Pattern.parse(args[0]);
         var region = session.region();
         EditEngine.get().submit(session.level(),
-            es -> Shapes.walls(region, v -> es.plan(v, pattern.next(v))),
+            es -> Shapes.walls(region, v -> es.plan(v, pattern)),
             n -> p.sendMessage("§dFastEdit §7| walls §f" + n + "§7 blocks."),
             t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());

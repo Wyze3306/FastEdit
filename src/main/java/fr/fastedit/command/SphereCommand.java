@@ -20,7 +20,7 @@ public class SphereCommand extends FeCommand {
         boolean hollow = args.length > 2 && args[2].equalsIgnoreCase("hollow");
         Vec3 center = new Vec3(p.getFloorX(), p.getFloorY(), p.getFloorZ());
         EditEngine.get().submit(p.getLevel(),
-            es -> Shapes.sphere(center, radius, hollow, v -> es.plan(v, pattern.next(v))),
+            es -> Shapes.sphere(center, radius, hollow, v -> es.plan(v, pattern)),
             n -> p.sendMessage("§dFastEdit §7| sphere §f" + n + "§7 blocks."),
             t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());

@@ -36,7 +36,7 @@ public abstract class Brush {
     protected void plan(EditSession es, Level level, Vec3 hit) {
         Consumer<Vec3> sink = v -> {
             if (mask == Mask.ANY || mask.matches(level, v)) {
-                es.plan(v, pattern.next(v));
+                es.plan(v, pattern);
             }
         };
         Shapes.collect(out -> shape(hit, out)).forEach(sink);

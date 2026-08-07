@@ -15,7 +15,7 @@ public final class ClipboardBrush extends Brush {
     private final boolean skipAir;
 
     public ClipboardBrush(Clipboard clipboard, boolean skipAir) {
-        super(v -> Blocks.air(), 1);
+        super((lvl, v) -> Blocks.air(), 1);
         this.clipboard = clipboard;
         this.skipAir = skipAir;
     }

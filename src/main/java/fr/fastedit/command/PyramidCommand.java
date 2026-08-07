@@ -20,7 +20,7 @@ public class PyramidCommand extends FeCommand {
         boolean hollow = args.length > 2 && args[2].equalsIgnoreCase("hollow");
         Vec3 base = new Vec3(p.getFloorX(), p.getFloorY(), p.getFloorZ());
         EditEngine.get().submit(p.getLevel(),
-            es -> Shapes.pyramid(base, size, hollow, v -> es.plan(v, pattern.next(v))),
+            es -> Shapes.pyramid(base, size, hollow, v -> es.plan(v, pattern)),
             n -> p.sendMessage("§dFastEdit §7| pyramid §f" + n + "§7 blocks."),
             t -> p.sendMessage("§c[FastEdit] " + describe(t)),
             session.undo());

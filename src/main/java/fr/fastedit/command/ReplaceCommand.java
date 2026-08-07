@@ -22,7 +22,7 @@ public class ReplaceCommand extends FeCommand {
         EditEngine.get().submit(session.level(),
             es -> {
                 es.setFilter(mask::matches);
-                Shapes.cuboid(region, v -> es.plan(v, pattern.next(v)));
+                Shapes.cuboid(region, v -> es.plan(v, pattern));
             },
             n -> p.sendMessage("§dFastEdit §7| replaced §f" + n + "§7 blocks."),
             t -> p.sendMessage("§c[FastEdit] " + describe(t)),
