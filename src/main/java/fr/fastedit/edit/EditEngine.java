@@ -6,6 +6,7 @@ import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateSubChunkBlocksPacket;
 import org.powernukkitx.Player;
 import org.powernukkitx.Server;
+import org.powernukkitx.block.BlockAir;
 import org.powernukkitx.block.BlockState;
 import org.powernukkitx.level.Level;
 import org.powernukkitx.level.format.IChunk;
@@ -41,6 +42,9 @@ public class EditEngine {
     private static final int UPDATE_FLAGS_ALL =
         (1 << UpdateBlockPacket.Flag.NEIGHBORS.ordinal())
         | (1 << UpdateBlockPacket.Flag.NETWORK.ordinal());
+
+    /** Interned air state — layer 1 is compared by identity against it. */
+    private static final BlockState AIR = BlockAir.STATE;
 
     /** Blocks materialised per streaming segment (one undo step each). */
     public static final int SEGMENT_BLOCKS = 100_000;
@@ -178,15 +182,10 @@ public class EditEngine {
         for (BlockChange c : changes) {
             BlockState target = forward ? c.target : c.previous;
             if (target == null) continue;
-            BlockState l1;
-            if (forward) {
-                l1 = c.layer1;
-            } else if (c.layer1 != null) {
-                // undo: restore the water we displaced, or clear it if none
-                l1 = c.prevLayer1 != null ? c.prevLayer1 : fr.fastedit.block.Blocks.air();
-            } else {
-                l1 = null;
-            }
+            // undo restores the layer 1 we overwrote (every edit records it, since every
+            // edit now writes layer 1); redo replays what the edit asked for, null
+            // meaning "clear", exactly as on the first pass.
+            BlockState l1 = forward ? c.layer1 : (c.prevLayer1 != null ? c.prevLayer1 : AIR);
             s.plan(c.pos, target, l1);
         }
         apply(s, null, onDone);
@@ -262,10 +261,15 @@ public class EditEngine {
                     }
 
                     c.previous = chunk.getBlockState(x & 15, y, z & 15, 0);
+                    c.prevLayer1 = chunk.getBlockState(x & 15, y, z & 15, 1);
                     chunk.setBlockState(x & 15, y, z & 15, c.target, 0);
-                    if (c.layer1 != null) {
-                        c.prevLayer1 = chunk.getBlockState(x & 15, y, z & 15, 1);
-                        chunk.setBlockState(x & 15, y, z & 15, c.layer1, 1);
+                    // Layer 1 always follows layer 0: a liquid left there after a //set
+                    // is invisible client-side but still swimmable, so an edit that does
+                    // not ask for a layer-1 block clears it instead of leaving it be.
+                    BlockState wantLayer1 = c.layer1 != null ? c.layer1 : AIR;
+                    boolean layer1Changed = c.prevLayer1 != wantLayer1;
+                    if (layer1Changed) {
+                        chunk.setBlockState(x & 15, y, z & 15, wantLayer1, 1);
                     }
                     written++;
 
@@ -283,6 +287,17 @@ public class EditEngine {
                         UPDATE_FLAGS_ALL,
                         -1,
                         ActorBlockSyncMessageId.NONE));
+                    // Layer 1 rides in extraBlocks: sending only standardBlocks leaves the
+                    // client with the water it had there, which it no longer draws but
+                    // still swims in.
+                    if (layer1Changed) {
+                        pkt.getExtraBlocks().add(new BlockChangeEntry(
+                            new BlockVector3(x, y, z).toNetwork(),
+                            new RuntimeBlockDefinition((int) wantLayer1.unsignedBlockStateHash()),
+                            UPDATE_FLAGS_ALL,
+                            -1,
+                            ActorBlockSyncMessageId.NONE));
+                    }
                 } catch (Throwable perBlock) {
                     c.target = null; // drop this block, keep the edit going
                     job.dropped++;
