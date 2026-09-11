@@ -145,6 +145,7 @@ What you write as `<mask>` (e.g. for `//replace`):
 //cut                        same as copy, then clears the selection
 //paste                      paste at your feet
 //paste -noair               paste but keep existing blocks where the clip is air
+//paste -onlyair             paste only into air — never touch an existing block
 //rotate <90|180|270>        rotate clipboard around Y
 //flip <x|y|z>               mirror the clipboard
 ```
@@ -152,6 +153,14 @@ What you write as `<mask>` (e.g. for `//replace`):
 Default `//paste` *overwrites everything* in the paste box, including with
 air blocks from the clipboard. Use `-noair` if you want to overlay the
 clipboard on existing terrain without clearing the gaps.
+
+`-onlyair` is the other side of the same idea: it looks at the **world**
+instead of the clipboard and only writes where the destination block is air.
+Anything already standing there wins, so a schematic dropped on a hill fills
+the empty space around it and leaves the terrain (and any build it overlaps)
+untouched. It implies `-noair` — writing air into air changes nothing — and
+the two can be combined, order doesn't matter. Blocks it skipped are not in
+the undo step, and the "pasted N blocks" count is what actually landed.
 
 ---
 
@@ -325,6 +334,10 @@ Add a mask so the brush only affects matching blocks:
 //mask none                           clear the mask
 ```
 
+The mask applies to `//brush clipboard` too, so `//mask #air` on a clipboard
+brush stamps the clip into the empty space only — the shovel version of
+`//paste -onlyair`.
+
 Right-click triggers a brush stroke. There's a **500 ms cooldown** to prevent
 spam from Bedrock's hold-to-attack behaviour, and the raycast reaches up to
 256 blocks so you can sculpt from a distance.
@@ -360,7 +373,7 @@ schematics that referenced Bedrock-unknown blocks.
 | `//sphere <pat> <r> [hollow]` | Sphere at your feet |
 | `//cyl <pat> <r> <h> [hollow]` | Cylinder |
 | `//pyramid <pat> <size> [hollow]` | Pyramid |
-| `//copy` `//cut` `//paste [-noair]` | Clipboard |
+| `//copy` `//cut` `//paste [-noair] [-onlyair]` | Clipboard |
 | `//rotate <90\|180\|270>` `//flip <x\|y\|z>` | Transform clipboard |
 | `//move <n> [dir]` `//stack <n> [dir]` | Move / stack |
 | `//undo [n]` `//redo [n]` | Undo / redo |

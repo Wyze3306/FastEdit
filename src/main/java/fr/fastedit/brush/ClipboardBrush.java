@@ -3,6 +3,7 @@ package fr.fastedit.brush;
 import org.powernukkitx.block.BlockState;
 import org.powernukkitx.level.Level;
 import fr.fastedit.block.Blocks;
+import fr.fastedit.block.Mask;
 import fr.fastedit.clipboard.Clipboard;
 import fr.fastedit.edit.EditSession;
 import fr.fastedit.math.Vec3;
@@ -33,7 +34,12 @@ public final class ClipboardBrush extends Brush {
                     BlockState s = clipboard.get(x, y, z);
                     if (s == null) continue;
                     if (skipAir && "minecraft:air".equals(s.getIdentifier())) continue;
-                    es.plan(new Vec3(hit.x() + x - off.x(), hit.y() + y - off.y(), hit.z() + z - off.z()), s);
+                    Vec3 at = new Vec3(hit.x() + x - off.x(), hit.y() + y - off.y(), hit.z() + z - off.z());
+                    // This brush plans its own positions, so it has to test the
+                    // mask itself — the base class never sees them, and //mask
+                    // #air was silently ignored on a clipboard brush.
+                    if (mask != Mask.ANY && !mask.matches(level, at)) continue;
+                    es.plan(at, s);
                 }
     }
 }

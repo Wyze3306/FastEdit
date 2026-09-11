@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 public class EditEngine {
@@ -132,7 +133,10 @@ public class EditEngine {
             // Lazily created on the main thread by the first tick; shared by
             // every segment so the pins live until the single final finalize.
             final ChunkPin[] pin = new ChunkPin[1];
-            long total = 0;
+            // Blocks actually written, not planned: a filtered edit (//paste
+            // -onlyair) skips positions at write time, so counting plans here
+            // would report blocks it never placed.
+            final AtomicLong written = new AtomicLong();
             try {
                 boolean more = true;
                 while (more) {
@@ -143,15 +147,19 @@ public class EditEngine {
                         if (failed.get()) return;
                         Thread.sleep(4);
                     }
-                    total += s.size();
                     outstanding.incrementAndGet();
-                    Consumer<Integer> segDone = n -> outstanding.decrementAndGet();
+                    // Add before the decrement: the wait below keys off
+                    // `outstanding`, so the count must already be in.
+                    Consumer<Integer> segDone = n -> {
+                        written.addAndGet(n);
+                        outstanding.decrementAndGet();
+                    };
                     synchronized (queue) {
                         queue.addLast(new PendingJob(s, segDone, undoSink, txn, touched, false, pin));
                     }
                 }
                 while (outstanding.get() > 0) Thread.sleep(8);
-                final long applied = total;
+                final long applied = written.get();
                 Server.getInstance().getScheduler().scheduleTask(plugin, () -> {
                     finalizeChunks(level, touched, pin[0]);  // persist+relight+resend once
                     if (onDone != null) onDone.accept(applied);
