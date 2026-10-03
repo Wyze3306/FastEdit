@@ -1,5 +1,6 @@
 package fr.fastedit.edit;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.ActorBlockSyncMessageId;
 import org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -284,9 +285,7 @@ public class EditEngine {
                     SubKey key = new SubKey(x >> 4, y >> 4, z >> 4);
                     UpdateSubChunkBlocksPacket pkt = packets.computeIfAbsent(key, k -> {
                         UpdateSubChunkBlocksPacket p = new UpdateSubChunkBlocksPacket();
-                        p.setChunkX(k.cx << 4);
-                        p.setChunkY(k.sy << 4);
-                        p.setChunkZ(k.cz << 4);
+                        p.setSubChunkBlockPosition(Vector3i.from(k.cx << 4, k.sy << 4, k.cz << 4));
                         return p;
                     });
                     pkt.getStandardBlocks().add(new BlockChangeEntry(
